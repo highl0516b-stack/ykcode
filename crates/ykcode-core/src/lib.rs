@@ -409,6 +409,17 @@ impl Document {
         id
     }
 
+    /// Insert `node` into `parent_id`'s children at position `index` (clamped to valid range).
+    pub fn insert_at(&mut self, node: Node, parent_id: NodeId, index: usize) -> NodeId {
+        let id = node.id;
+        self.nodes.insert(id, node);
+        if let Some(parent) = self.nodes.get_mut(&parent_id) {
+            let clamped = index.min(parent.children.len());
+            parent.children.insert(clamped, id);
+        }
+        id
+    }
+
     /// Remove a node from the tree (detaches from parent, removes from map).
     /// Children of the removed node are left as orphans (not recursively removed).
     pub fn remove_node(&mut self, id: NodeId) {
@@ -593,5 +604,27 @@ mod tests {
             doc.move_sibling(root_id, SiblingDirection::Up),
             Err(MoveError::NoParent)
         );
+    }
+
+    #[test]
+    fn insert_at_beginning() {
+        let mut doc = Document::default();
+        let root = doc.active_page().unwrap().root_node;
+        let a_id = doc.insert_node(Node::new(NodeKind::Text));
+        let b = Node::new(NodeKind::Button);
+        let b_id = b.id;
+        doc.insert_at(b, root, 0);
+        assert_eq!(doc.node(&root).unwrap().children[0], b_id);
+        assert_eq!(doc.node(&root).unwrap().children[1], a_id);
+    }
+
+    #[test]
+    fn insert_at_clamps_out_of_bounds() {
+        let mut doc = Document::default();
+        let root = doc.active_page().unwrap().root_node;
+        let n = Node::new(NodeKind::Stack);
+        let id = n.id;
+        doc.insert_at(n, root, 999);
+        assert_eq!(doc.node(&root).unwrap().children, &[id]);
     }
 }

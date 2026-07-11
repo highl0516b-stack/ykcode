@@ -2827,6 +2827,7 @@ dependencies = [
  "leptos_router",
  "serde",
  "uuid",
+ "web-sys",
  "ykcode-core",
 ]
 

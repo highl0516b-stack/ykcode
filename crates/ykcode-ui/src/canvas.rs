@@ -1,6 +1,7 @@
 use leptos::prelude::*;
 use ykcode_core::{Document, NodeId, NodeKind};
 
+use crate::dnd::{kind_from_payload, node_with_defaults, MIME_FALLBACK, MIME_KIND};
 use crate::node_inline_style;
 use crate::EditorCtx;
 
@@ -37,6 +38,7 @@ fn EditableLeafNode(
     let draft = RwSignal::new(String::new());
     let is_editing = move || ctx.editing_node.get() == Some(node_id);
     let is_selected = move || ctx.selected_node.get() == Some(node_id);
+    let is_just_dropped = move || ctx.just_dropped.get() == Some(node_id);
 
     let start_edit = move || {
         draft.set(ctx.document.with(|d| {
@@ -65,10 +67,12 @@ fn EditableLeafNode(
             style=style
             class:is-selected=is_selected
             class:is-editing=is_editing
+            class:yk-node--just-dropped=is_just_dropped
             data-kind=kind_label
             on:click=move |ev| {
                 ev.stop_propagation();
                 ctx.selected_node.set(Some(node_id));
+                ctx.just_dropped.set(None);
             }
             on:dblclick=move |ev| {
                 ev.stop_propagation();
@@ -140,6 +144,7 @@ fn render_node(doc: &Document, id: NodeId, ctx: EditorCtx) -> AnyView {
         .collect();
 
     let is_selected = move || ctx.selected_node.get() == Some(id);
+    let is_just_dropped = move || ctx.just_dropped.get() == Some(id);
 
     if has_content && children_ids.is_empty() {
         view! {
@@ -147,10 +152,12 @@ fn render_node(doc: &Document, id: NodeId, ctx: EditorCtx) -> AnyView {
                 class=kind_class
                 style=inline_style
                 class:is-selected=is_selected
+                class:yk-node--just-dropped=is_just_dropped
                 data-kind=kind_label
                 on:click=move |ev| {
                     ev.stop_propagation();
                     ctx.selected_node.set(Some(id));
+                    ctx.just_dropped.set(None);
                 }
             >
                 {content.unwrap_or_default()}
@@ -164,11 +171,13 @@ fn render_node(doc: &Document, id: NodeId, ctx: EditorCtx) -> AnyView {
                 class=kind_class
                 style=inline_style
                 class:is-selected=is_selected
+                class:yk-node--just-dropped=is_just_dropped
                 data-kind=kind_label
                 data-empty=if is_empty { "true" } else { "false" }
                 on:click=move |ev| {
                     ev.stop_propagation();
                     ctx.selected_node.set(Some(id));
+                    ctx.just_dropped.set(None);
                 }
             >
                 {child_views}
@@ -182,14 +191,65 @@ fn render_node(doc: &Document, id: NodeId, ctx: EditorCtx) -> AnyView {
 pub(crate) fn CanvasArea() -> impl IntoView {
     let ctx = use_context::<EditorCtx>().expect("EditorCtx missing");
     let zoom_label = move || format!("{}%", ctx.zoom.get() as u32);
+    let drag_over = ctx.drag_over_artboard;
 
     view! {
         <main class="yk-canvas-wrap">
             <div
                 class="yk-canvas"
-                on:click=move |_| ctx.selected_node.set(None)
+                on:click=move |_| {
+                    ctx.selected_node.set(None);
+                    ctx.just_dropped.set(None);
+                }
             >
-                <div class="yk-artboard" data-mode="edit">
+                <div
+                    class="yk-artboard"
+                    class:yk-drop-zone--active=move || drag_over.get()
+                    data-mode="edit"
+                    on:dragover=move |ev| {
+                        ev.prevent_default();
+                        if let Some(dt) = ev.data_transfer() {
+                            dt.set_drop_effect("copy");
+                        }
+                        drag_over.set(true);
+                    }
+                    on:dragleave=move |_| {
+                        drag_over.set(false);
+                    }
+                    on:drop=move |ev| {
+                        ev.prevent_default();
+                        drag_over.set(false);
+
+                        let kind_label = ev.data_transfer().and_then(|dt| {
+                            dt.get_data(MIME_KIND)
+                                .ok()
+                                .filter(|s| !s.is_empty())
+                                .or_else(|| dt.get_data(MIME_FALLBACK).ok())
+                                .filter(|s| !s.is_empty())
+                        });
+
+                        if let Some(label) = kind_label {
+                            let node = node_with_defaults(kind_from_payload(&label));
+                            let new_id = node.id;
+                            ctx.document.update(|doc| {
+                                let parent_id = doc
+                                    .active_page_id
+                                    .and_then(|pid| doc.pages.iter().find(|p| p.id == pid))
+                                    .map(|p| p.root_node);
+
+                                if let Some(parent_id) = parent_id {
+                                    let index = doc
+                                        .node(&parent_id)
+                                        .map(|n| n.children.len())
+                                        .unwrap_or(0);
+                                    doc.insert_at(node, parent_id, index);
+                                }
+                            });
+                            ctx.selected_node.set(Some(new_id));
+                            ctx.just_dropped.set(Some(new_id));
+                        }
+                    }
+                >
                     {move || {
                         ctx.document.with(|d| {
                             let is_empty = d

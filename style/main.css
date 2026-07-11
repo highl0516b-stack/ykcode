@@ -1071,3 +1071,39 @@ input {
 .yk-toolbar__doc { padding: var(--sp-1) var(--sp-2); border: 1px solid transparent; border-radius: var(--r-sm); color: var(--color-text-2); font: var(--fw-medium) var(--text-sm) / 1.25 var(--font-display); transition: background var(--dur-fast); }
 .yk-toolbar__doc:hover { background: var(--color-hover); color: var(--color-text); }
 .yk-toolbar__doc-input { padding: var(--sp-1) var(--sp-2); border: 1px solid var(--color-brand); border-radius: var(--r-sm); outline: 0; color: var(--color-text); background: var(--color-panel-hi); font: var(--fw-medium) var(--text-sm) / 1.25 var(--font-display); box-shadow: 0 0 0 2px rgb(155 123 255 / 16%); }
+
+/* === Round 6: Drag-and-Drop === */
+
+/* Palette card drag source state */
+.yk-card--dragging {
+  opacity: 0.38;
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+/* Drop zone — artboard when valid drag is over */
+.yk-drop-zone--active {
+  background: color-mix(in srgb, var(--color-artboard) 94%, var(--color-mint));
+  outline: 2px solid color-mix(in srgb, var(--color-mint) 72%, transparent);
+  outline-offset: 4px;
+  box-shadow:
+    0 0 1.75rem color-mix(in srgb, var(--color-mint) 12%, transparent),
+    inset 0 0 0 1px color-mix(in srgb, var(--color-mint) 20%, transparent);
+}
+
+/* Insertion feedback — node that just dropped */
+@keyframes yk-drop-arrive {
+  0%   { opacity: 0; transform: translateY(-6px) scale(0.985); }
+  55%  { opacity: 1; transform: none; box-shadow: 0 0 0 5px color-mix(in srgb, var(--color-mint) 22%, transparent); }
+  100% { opacity: 1; transform: none; box-shadow: 0 0 0 0 transparent; }
+}
+
+.yk-node--just-dropped {
+  animation: yk-drop-arrive var(--dur-slow) var(--ease-emp) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yk-node--just-dropped { animation: none; }
+  .yk-card--dragging { transform: none; }
+  .yk-drop-zone--active { transition: none; }
+}

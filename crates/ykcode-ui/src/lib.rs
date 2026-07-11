@@ -1,4 +1,5 @@
 mod canvas;
+mod dnd;
 mod editor;
 mod layers;
 mod palette;
@@ -30,6 +31,8 @@ pub struct EditorCtx {
     pub selected_node: RwSignal<Option<NodeId>>,
     pub editing_node: RwSignal<Option<NodeId>>,
     pub document: RwSignal<Document>,
+    pub drag_over_artboard: RwSignal<bool>,
+    pub just_dropped: RwSignal<Option<NodeId>>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

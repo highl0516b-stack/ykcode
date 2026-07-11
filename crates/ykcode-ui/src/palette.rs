@@ -1,6 +1,7 @@
 use leptos::prelude::*;
-use ykcode_core::{Node, NodeKind};
+use ykcode_core::NodeKind;
 
+use crate::dnd::{node_with_defaults, MIME_FALLBACK, MIME_KIND};
 use crate::EditorCtx;
 
 #[derive(Clone, PartialEq)]
@@ -65,28 +66,7 @@ fn all_palette_entries() -> Vec<PaletteEntry> {
 }
 
 fn kind_from_label(label: &str) -> NodeKind {
-    match label {
-        "Section" => NodeKind::Section,
-        "Stack" => NodeKind::Stack,
-        "Text" => NodeKind::Text,
-        "Button" => NodeKind::Button,
-        "Image" => NodeKind::Image,
-        "Container" => NodeKind::Container,
-        "Divider" => NodeKind::Divider,
-        "Spacer" => NodeKind::Spacer,
-        _ => NodeKind::Container,
-    }
-}
-
-fn node_with_defaults(kind: NodeKind) -> Node {
-    let mut node = Node::new(kind.clone());
-    node.content = match kind {
-        NodeKind::Text => Some("Add your text".into()),
-        NodeKind::Button => Some("Button".into()),
-        NodeKind::Image => Some("🖼 Add image".into()),
-        _ => None,
-    };
-    node
+    crate::dnd::kind_from_payload(label)
 }
 
 #[component]
@@ -134,6 +114,16 @@ pub(crate) fn ComponentPalette() -> impl IntoView {
                                         doc.insert_node(node);
                                     });
                                     ctx.selected_node.set(Some(new_id));
+                                }
+                                on:dragstart=move |ev| {
+                                    if let Some(dt) = ev.data_transfer() {
+                                        dt.set_effect_allowed("copy");
+                                        let _ = dt.set_data(MIME_KIND, entry.label);
+                                        let _ = dt.set_data(MIME_FALLBACK, entry.label);
+                                    }
+                                }
+                                on:dragend=move |_| {
+                                    // palette card returns to normal - handled by CSS :active state
                                 }
                             >
                                 <span class="yk-card__icon" aria-hidden="true">

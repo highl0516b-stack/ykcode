@@ -17,6 +17,8 @@ pub(crate) fn Editor() -> impl IntoView {
         selected_node: RwSignal::new(None),
         editing_node: RwSignal::new(None),
         document: RwSignal::new(ykcode_core::Document::default()),
+        drag_over_artboard: RwSignal::new(false),
+        just_dropped: RwSignal::new(None),
     };
     provide_context(ctx);
 

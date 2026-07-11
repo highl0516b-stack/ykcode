@@ -47,7 +47,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # WASM
 wasm-bindgen = { version = "0.2.126" }
-web-sys = { version = "0.3.103" }
+web-sys = { version = "0.3.103", features = ["DataTransfer"] }
 js-sys = { version = "0.3.103" }
 
 # Internal crates
