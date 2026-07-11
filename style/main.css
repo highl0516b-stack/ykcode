@@ -1,0 +1,842 @@
+/* ============================================================
+   ykcode Design System — "Obsidian Spectrum"
+   Art Direction: @Art_Director · UX: @UX_Designer
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. Design tokens
+   ------------------------------------------------------------ */
+:root {
+  color-scheme: dark;
+
+  /* Fonts */
+  --font-ui: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Manrope", ui-sans-serif, sans-serif;
+
+  /* Type scale */
+  --text-xs:   0.75rem;
+  --text-sm:   0.8125rem;
+  --text-base: 0.875rem;
+  --text-lg:   1rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+
+  --lh-xs:   1rem;
+  --lh-sm:   1.125rem;
+  --lh-base: 1.25rem;
+  --lh-lg:   1.5rem;
+  --lh-xl:   1.75rem;
+  --lh-2xl:  2rem;
+
+  --fw-regular:  400;
+  --fw-medium:   500;
+  --fw-semibold: 600;
+  --fw-bold:     700;
+
+  /* Brand */
+  --color-brand:        #9b7bff;
+  --color-brand-hover:  #ad93ff;
+  --color-brand-active: #7c5cfc;
+  --color-on-brand:     #10121a;
+
+  /* Accents */
+  --color-mint: #42e8c3;
+  --color-cyan: #4cc9f0;
+
+  /* Surfaces */
+  --color-canvas:    #07080d;
+  --color-grid-sm:   #141720;
+  --color-grid-lg:   #25293a;
+  --color-artboard:  #f8f9fc;
+  --color-panel:     #10121a;
+  --color-panel-glass: rgb(16 18 26 / 94%);
+  --color-panel-hi:  #171a25;
+  --color-toolbar:   #0d0f16;
+
+  /* Text */
+  --color-text:        #f5f7ff;
+  --color-text-2:      #b9bed0;
+  --color-text-3:      #7d849d;
+  --color-text-inv:    #10121a;
+
+  /* Borders & states */
+  --color-border:      #282c3c;
+  --color-border-hi:   #3b4054;
+  --color-hover:       #1b1e2b;
+  --color-active:      #25293a;
+  --color-selected:    rgb(155 123 255 / 12%);
+  --color-focus:       #b8a6ff;
+  --color-overlay:     rgb(3 4 9 / 72%);
+
+  /* Semantic */
+  --color-ok:   #45d483;
+  --color-err:  #ff647c;
+  --color-warn: #ffb84d;
+  --color-info: #4cc9f0;
+
+  /* Spacing */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+
+  /* Radius */
+  --r-sm:   0.375rem;
+  --r-md:   0.625rem;
+  --r-lg:   0.875rem;
+  --r-xl:   1.25rem;
+  --r-pill: 999px;
+
+  /* Shadows */
+  --shadow-card:    0 4px 14px rgb(0 0 0 / 24%);
+  --shadow-float:   0 16px 48px rgb(0 0 0 / 38%);
+  --shadow-board:   0 24px 80px rgb(0 0 0 / 48%);
+  --shadow-select:  0 0 0 2px var(--color-brand), 0 0 24px rgb(155 123 255 / 22%);
+
+  /* Layout */
+  --toolbar-h:    3.5rem;
+  --status-h:     1.75rem;
+  --left-w:       18rem;
+  --right-w:      19rem;
+  --rail-w:       3rem;
+  --tab-h:        2.25rem;
+  --touch-min:    2.75rem;
+
+  /* Motion */
+  --dur-fast:   120ms;
+  --dur-mid:    180ms;
+  --dur-slow:   240ms;
+  --ease-std:   cubic-bezier(0.2, 0, 0, 1);
+  --ease-emp:   cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Misc */
+  --blur-panel: 18px;
+  --grid-sm: 20px;
+  --grid-lg: 100px;
+  --z-canvas: 0;
+  --z-sel: 10;
+  --z-panel: 20;
+  --z-toolbar: 30;
+  --z-popover: 40;
+  --z-drag: 50;
+  --z-modal: 60;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-mid:  0ms;
+    --dur-slow: 0ms;
+  }
+}
+
+/* ------------------------------------------------------------
+   2. Reset & base
+   ------------------------------------------------------------ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: var(--lh-base);
+  color: var(--color-text);
+  background: var(--color-canvas);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+input {
+  font-family: inherit;
+  color: inherit;
+}
+
+/* ------------------------------------------------------------
+   3. Shell layout
+   ------------------------------------------------------------ */
+.yk-shell {
+  display: grid;
+  grid-template-rows: var(--toolbar-h) 1fr var(--status-h);
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.yk-workspace {
+  display: grid;
+  grid-template-columns: var(--left-w) 1fr var(--right-w);
+  overflow: hidden;
+  transition: grid-template-columns var(--dur-mid) var(--ease-std);
+}
+
+/* ------------------------------------------------------------
+   4. Toolbar
+   ------------------------------------------------------------ */
+.yk-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 0 var(--sp-4);
+  background: var(--color-toolbar);
+  border-bottom: 1px solid var(--color-border);
+  z-index: var(--z-toolbar);
+  backdrop-filter: blur(var(--blur-panel));
+}
+
+.yk-toolbar__start,
+.yk-toolbar__end {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex: 1;
+}
+
+.yk-toolbar__end {
+  justify-content: flex-end;
+}
+
+.yk-toolbar__center {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+}
+
+.yk-toolbar__sep {
+  width: 1px;
+  height: 1.25rem;
+  background: var(--color-border);
+  margin: 0 var(--sp-1);
+}
+
+.yk-brand {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: var(--fw-bold);
+  color: var(--color-brand);
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+
+.yk-toolbar__doc {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  font-weight: var(--fw-medium);
+}
+
+/* Breakpoint selector */
+.yk-bp {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0 var(--sp-3);
+  height: 2rem;
+  border-radius: var(--r-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-3);
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+
+.yk-bp:hover {
+  background: var(--color-hover);
+  color: var(--color-text-2);
+}
+
+.yk-bp--on {
+  background: var(--color-selected);
+  color: var(--color-brand);
+}
+
+/* ------------------------------------------------------------
+   5. Buttons
+   ------------------------------------------------------------ */
+.yk-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: 0 var(--sp-3);
+  height: 2rem;
+  border-radius: var(--r-md);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  transition: background var(--dur-fast), box-shadow var(--dur-fast), opacity var(--dur-fast);
+  min-width: var(--touch-min);
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.yk-btn:active { opacity: 0.82; }
+
+.yk-btn--primary {
+  background: var(--color-brand);
+  color: var(--color-on-brand);
+}
+
+.yk-btn--primary:hover { background: var(--color-brand-hover); }
+.yk-btn--primary:active { background: var(--color-brand-active); }
+
+.yk-btn--secondary {
+  background: var(--color-panel-hi);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+.yk-btn--secondary:hover { border-color: var(--color-border-hi); }
+
+.yk-btn--ghost {
+  color: var(--color-text-2);
+}
+
+.yk-btn--ghost:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+/* ------------------------------------------------------------
+   6. Left panel
+   ------------------------------------------------------------ */
+.yk-left {
+  display: grid;
+  grid-template-rows: var(--tab-h) 1fr;
+  background: var(--color-panel);
+  border-right: 1px solid var(--color-border);
+  overflow: hidden;
+  position: relative;
+  transition: width var(--dur-mid) var(--ease-std);
+}
+
+.yk-left--closed {
+  width: var(--rail-w);
+}
+
+.yk-panel-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.yk-panel-tab {
+  flex: 1;
+  height: var(--tab-h);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-3);
+  border-bottom: 2px solid transparent;
+  transition: color var(--dur-fast), border-color var(--dur-fast);
+}
+
+.yk-panel-tab:hover { color: var(--color-text-2); }
+
+.yk-panel-tab--on {
+  color: var(--color-brand);
+  border-bottom-color: var(--color-brand);
+}
+
+.yk-panel-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.yk-rail-toggle {
+  position: absolute;
+  bottom: var(--sp-4);
+  right: calc(-1 * var(--sp-4));
+  width: 1.5rem;
+  height: 2rem;
+  background: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-panel);
+  cursor: pointer;
+  transition: color var(--dur-fast);
+}
+
+.yk-rail-toggle:hover { color: var(--color-text); }
+
+.yk-rail-toggle--right {
+  right: auto;
+  left: calc(-1 * var(--sp-4));
+  border-radius: var(--r-sm) 0 0 var(--r-sm);
+}
+
+/* ------------------------------------------------------------
+   7. Component palette
+   ------------------------------------------------------------ */
+.yk-palette {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.yk-palette__search {
+  padding: var(--sp-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.yk-input {
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3);
+  background: var(--color-panel-hi);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+  outline: none;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+
+.yk-input::placeholder { color: var(--color-text-3); }
+
+.yk-input:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 2px rgb(155 123 255 / 20%);
+}
+
+.yk-palette__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  overflow-y: auto;
+}
+
+/* Palette card */
+.yk-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-3) var(--sp-2);
+  min-height: 5rem;
+  background: var(--color-panel-hi);
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-md);
+  font-size: var(--text-xs);
+  color: var(--color-text-2);
+  cursor: grab;
+  position: relative;
+  transition:
+    border-color var(--dur-fast),
+    transform var(--dur-fast),
+    box-shadow var(--dur-fast);
+  user-select: none;
+}
+
+.yk-card:hover {
+  border-color: var(--color-border-hi);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-card);
+}
+
+.yk-card:active {
+  transform: scale(0.97);
+  cursor: grabbing;
+}
+
+.yk-card--featured {
+  border-color: rgb(155 123 255 / 40%);
+  background: rgb(155 123 255 / 8%);
+}
+
+.yk-card--featured:hover { border-color: var(--color-brand); }
+
+.yk-card__icon {
+  font-size: var(--text-xl);
+  line-height: 1;
+}
+
+.yk-card__label {
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+}
+
+.yk-card__badge {
+  position: absolute;
+  top: var(--sp-1);
+  right: var(--sp-1);
+  padding: 1px var(--sp-1);
+  background: var(--color-brand);
+  color: var(--color-on-brand);
+  border-radius: var(--r-pill);
+  font-size: 0.625rem;
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.4;
+}
+
+/* ------------------------------------------------------------
+   8. Layer tree
+   ------------------------------------------------------------ */
+.yk-layers {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.yk-layers__header {
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-2);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.yk-layer-page {
+  padding: var(--sp-2) 0;
+}
+
+.yk-layer-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  width: 100%;
+  padding: var(--sp-1) var(--sp-4);
+  min-height: 1.75rem;
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  text-align: left;
+  border-radius: 0;
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+
+.yk-layer-row:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.yk-layer-row--page {
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-3);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.yk-layer-row--selected {
+  background: var(--color-selected);
+  color: var(--color-brand);
+}
+
+.yk-layer-icon {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  width: 1rem;
+  text-align: center;
+}
+
+.yk-layer-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------
+   9. Canvas
+   ------------------------------------------------------------ */
+.yk-canvas-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--color-canvas);
+  background-image:
+    radial-gradient(circle, var(--color-grid-sm) 1px, transparent 1px),
+    radial-gradient(circle, var(--color-grid-lg) 1px, transparent 1px);
+  background-size:
+    var(--grid-sm) var(--grid-sm),
+    var(--grid-lg) var(--grid-lg);
+}
+
+.yk-canvas {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  cursor: default;
+}
+
+.yk-artboard {
+  width: 1440px;
+  min-height: 960px;
+  background: var(--color-artboard);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-board);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.yk-artboard__content {
+  width: 100%;
+  height: 100%;
+}
+
+/* Zoom bar */
+.yk-zoom-bar {
+  position: absolute;
+  bottom: var(--sp-4);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  padding: var(--sp-1) var(--sp-2);
+  background: var(--color-panel-glass);
+  backdrop-filter: blur(var(--blur-panel));
+  border: 1px solid var(--color-border);
+  border-radius: var(--r-pill);
+  box-shadow: var(--shadow-card);
+  z-index: var(--z-panel);
+}
+
+.yk-zoom-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--r-sm);
+  font-size: var(--text-base);
+  color: var(--color-text-2);
+  transition: background var(--dur-fast), color var(--dur-fast);
+}
+
+.yk-zoom-btn:hover {
+  background: var(--color-hover);
+  color: var(--color-text);
+}
+
+.yk-zoom-val {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-2);
+  min-width: 3rem;
+  text-align: center;
+}
+
+/* ------------------------------------------------------------
+   10. Empty state
+   ------------------------------------------------------------ */
+.yk-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--sp-10);
+  gap: var(--sp-4);
+  min-height: 480px;
+}
+
+.yk-empty__glyph {
+  font-size: 3rem;
+  color: var(--color-text-3);
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+.yk-empty__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--fw-semibold);
+  color: #10121a;
+  line-height: var(--lh-xl);
+}
+
+.yk-empty__body {
+  font-size: var(--text-base);
+  color: #64748b;
+  max-width: 24rem;
+  line-height: var(--lh-lg);
+}
+
+.yk-empty__actions {
+  display: flex;
+  gap: var(--sp-3);
+}
+
+/* Override button colours for light artboard context */
+.yk-empty__actions .yk-btn--primary {
+  background: var(--color-brand);
+  color: var(--color-on-brand);
+}
+
+.yk-empty__actions .yk-btn--ghost {
+  color: #475569;
+}
+
+.yk-empty__actions .yk-btn--ghost:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+/* ------------------------------------------------------------
+   11. Properties panel
+   ------------------------------------------------------------ */
+.yk-right {
+  display: grid;
+  grid-template-rows: 1fr;
+  background: var(--color-panel);
+  border-left: 1px solid var(--color-border);
+  overflow: hidden;
+  position: relative;
+  transition: width var(--dur-mid) var(--ease-std);
+}
+
+.yk-right--closed { width: var(--rail-w); }
+
+.yk-props {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+}
+
+.yk-props__header {
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background: var(--color-panel);
+  z-index: 1;
+}
+
+.yk-prop-section {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.yk-prop-section__title {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-4);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.yk-prop-section__title:hover { color: var(--color-text-2); }
+
+.yk-prop-rows {
+  padding: var(--sp-2) 0;
+}
+
+.yk-prop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--sp-1) var(--sp-4);
+  min-height: 2rem;
+  gap: var(--sp-2);
+}
+
+.yk-prop-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-3);
+  flex-shrink: 0;
+}
+
+.yk-prop-value {
+  font-size: var(--text-sm);
+  color: var(--color-text-2);
+  font-weight: var(--fw-medium);
+  text-align: right;
+}
+
+/* ------------------------------------------------------------
+   12. Status bar
+   ------------------------------------------------------------ */
+.yk-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--sp-4);
+  background: var(--color-toolbar);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-xs);
+  color: var(--color-text-3);
+  z-index: var(--z-toolbar);
+}
+
+.yk-status__l { display: flex; align-items: center; gap: var(--sp-2); }
+.yk-status__r { display: flex; align-items: center; gap: var(--sp-2); }
+
+/* ------------------------------------------------------------
+   13. Utility / misc
+   ------------------------------------------------------------ */
+.yk-not-found {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  color: var(--color-text-3);
+  font-family: var(--font-display);
+}
+
+/* Focus ring — accessible but unobtrusive */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--r-pill);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-border-hi); }
+
+/* Responsive: panels become overlays on smaller viewports */
+@media (max-width: 1199px) {
+  .yk-workspace {
+    grid-template-columns: var(--rail-w) 1fr var(--rail-w);
+  }
+}
+
+@media (max-width: 767px) {
+  .yk-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .yk-left,
+  .yk-right {
+    display: none;
+  }
+}

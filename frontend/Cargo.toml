@@ -1,0 +1,16 @@
+[package]
+name = "ykcode-frontend"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ykcode-core.workspace = true
+ykcode-ui = { workspace = true, features = ["hydrate"] }
+leptos = { workspace = true, features = ["hydrate"] }
+leptos_meta.workspace = true
+leptos_router.workspace = true
+wasm-bindgen.workspace = true
