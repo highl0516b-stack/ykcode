@@ -1,0 +1,99 @@
+---
+description: Defines the project vision, strict technology stack, data layer architecture, and workflow rules for a Zero-Code Generation Platform built with Rust, Leptos, and Wasm.
+globs: *
+alwaysApply: true
+---
+
+# 🌟 Project Context & Vision
+
+You are building a revolutionary **Zero-Code Generation Platform**. Always keep the following core philosophies in mind when designing architecture, writing code, or suggesting features:
+
+### 1. Core Philosophy: Hands-On Creation
+- **Zero-Code Engine**: Powered by fine-grained, reactive bidirectional rendering. 
+- **Tactile Generation**: Everything—from a single button, a sidebar, a single-page interface, to an entire website—must be generated purely through intuitive, hands-on interactions (gestures, drag-and-drop) rather than writing code.
+- **Human-Centric**: The ultimate goal is to free human energy for pure creativity. Users should spend their time designing, not negotiating with AI agents over prompt engineering or writing boilerplate code to build human-centric applications.
+
+### 2. User Experience (UX) & Learning Curve
+- **Mobile-First**: The platform is heavily optimized for mobile user experiences.
+- **Low Floor, High Ceiling**: Features an "easy to learn, hard to master" learning curve:
+  - **8 Minutes**: A user can produce a standard button component.
+  - **4 Hours**: A user can craft professional, hidden, nested multi-layer forms.
+  - **1-2 Weeks**: A user can build and deploy an entire, fully-functional website.
+
+### 3. Business Model
+- Operates under a hybrid **commercial and partially open-source** license model, strategically designed to generate sustainable revenue and achieve market success.
+
+---
+
+# 🛠️ Technology Stack & Workflow Rules
+
+You are an expert in modern Rust, WebAssembly, and cross-platform development. You must strictly adhere to the following technology stack and tooling versions when generating code, suggesting architectures, or debugging.
+
+## 📦 Core Technology Stack
+
+### Backend & Fullstack
+- **Language**: Rust 1.88.0+
+- **Web Frameworks**: Leptos 0.8.x (Frontend/Fullstack), Axum 0.8.x (Backend API)
+- **Async Runtime**: Tokio
+- **Databases & Storage**: SQLite (Relational), Fjall 3.x (Embedded KV), Tonbo (LSM-Tree KV)
+
+### WebAssembly & Edge Computing
+- **Runtimes & Deployment**: Wasmer 7.x, Wasmer Edge
+- **Wasm Tooling**: wasix 7.x (with volume support), wasm-pack, wasm-bindgen, wasm-tools 1.248.x
+
+### Mobile & Native
+- **Languages**: Kotlin (Android), Swift (iOS)
+- **Build Tools**: Gradle, Trunk (Wasm bundler)
+
+### Rust Toolchain & Quality Assurance
+- **Manager**: rustup
+- **Build/Dev**: cargo-leptos 0.3.6
+- **Linting & Formatting**: cargo-fmt, cargo-clippy
+- **Testing**: cargo test, cargo check
+
+---
+
+## 📜 Mandatory Development Rules
+
+### 1. Rust & Leptos Standards
+- **Version Compliance**: Always write code compatible with **Rust 1.88.0+**. Utilize modern Rust idioms and async/await patterns.
+- **Leptos 0.8.x Reactivity**: Use the latest Leptos 0.8.x reactive primitives (`RwSignal`, `ReadSignal`, `Memo`, `Effect`). Ensure components are properly typed and use the `#[component]` macro correctly. *Crucial for the "fine-grained reactive bidirectional rendering" requirement.*
+- **Axum 0.8.x**: Design RESTful APIs using Axum 0.8.x extractors, middleware, and state management. Ensure seamless integration with the Tokio runtime.
+
+### 2. WebAssembly & WASIX Architecture
+- **Wasm First**: When targeting the browser or Wasmer Edge, ensure code is properly configured for `wasm32-unknown-unknown` or `wasm32-wasip1` targets.
+- **Wasmer & WASIX**: Leverage **wasix 7.x** for advanced Wasm capabilities like volume mounting and networking. Use **Wasmer 7.x** APIs for runtime integration.
+- **Interop**: Use `wasm-bindgen` for JS-Wasm communication and `wasm-pack` for packaging. Use `Trunk` for pure frontend Wasm bundling when not using `cargo-leptos`.
+
+### 3. Database & Storage Strategy (Data Layer Architecture)
+- **SQLite & Wasm Compilation**: Due to Wasm safety locks, SQLite must rely on `wasi-sdk` during compilation to statically link graph data extensions.
+- **Platform-Specific Storage Mapping**:
+  - **Wasmer Edge Volumes**: Mapped and utilized specifically for mobile platforms.
+  - **OPFS (Origin Private File System)**: Mapped and utilized specifically for browser environments.
+- **Tonbo (Dispatcher & Cache Balancer)**: Acts as the central dispatcher. It batches confirmed items/transactions and writes them into SQLite. Additionally, it employs multi-step caching and snapshots to balance and optimize the in-memory cache of Fjall.
+- **Fjall**: Serves as the high-performance embedded KV store, working in tandem with Tonbo's caching mechanisms.
+- *Rule*: Always abstract database operations behind traits to allow for mocking during `cargo test`.
+
+### 4. Mobile Integration (Kotlin & Swift)
+- Use **Kotlin** and **Gradle** for Android native modules or wrappers.
+- Use **Swift** for iOS native modules.
+- Ensure FFI (Foreign Function Interface) boundaries between Rust (via Wasm or C-ABI) and Kotlin/Swift are safe, well-documented, and handle memory correctly to support the mobile-first UX.
+
+### 5. Tooling & Quality Assurance (Strict)
+- **Before committing or finalizing code**, you MUST ensure it passes the following checks:
+  1. `cargo check` (Compilation validation)
+  2. `cargo fmt` (Standardized formatting)
+  3. `cargo clippy -- -D warnings` (Zero-tolerance for lints)
+  4. `cargo test` (Unit and integration tests)
+- **Leptos Dev**: Use `cargo-leptos 0.3.6` for hot-reloading and fullstack builds.
+- **Wasm Validation**: Use `wasm-tools 1.248.x` to inspect, validate, and optimize Wasm binaries.
+
+---
+
+## 🔄 Workflow Instructions for AI
+When asked to implement a feature for this Zero-Code Platform:
+1. **Align with Vision**: Ensure the feature supports tactile, hands-on creation and enhances the mobile-first UX.
+2. **Identify Domain**: Determine if the task belongs to Backend (Axum), Frontend (Leptos), Wasm/Edge (Wasmer), or Mobile (Kotlin/Swift).
+3. **Select Storage**: Choose the appropriate database and storage mapping (SQLite/Wasm-SDK, Wasmer Edge Volumes, OPFS, Tonbo, Fjall) based on the platform and data structure.
+4. **Implement**: Write the code adhering to Rust 1.88.0+ standards and Leptos 0.8.x fine-grained reactivity.
+5. **Verify**: Provide the necessary `cargo` or `gradle` commands to test, lint, and build the code.
