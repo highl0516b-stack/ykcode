@@ -1,3 +1,5 @@
+#![recursion_limit = "512"]
+
 use wasm_bindgen::prelude::*;
 use ykcode_ui::App;
 
