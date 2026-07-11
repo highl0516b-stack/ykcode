@@ -1,0 +1,14 @@
+/workspace/target/debug/deps/codee-d8ce79f6cd086836.d: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/lib.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/binary/mod.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/binary/from_to_bytes.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/error.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/hybrid.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/mod.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/from_to_string.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/json_serde.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/option.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/traits.rs
+
+/workspace/target/debug/deps/libcodee-d8ce79f6cd086836.rmeta: /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/lib.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/binary/mod.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/binary/from_to_bytes.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/error.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/hybrid.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/mod.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/from_to_string.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/json_serde.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/option.rs /usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/traits.rs
+
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/lib.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/binary/mod.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/binary/from_to_bytes.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/error.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/hybrid.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/mod.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/from_to_string.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/json_serde.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/string/option.rs:
+/usr/local/cargo/registry/src/index.crates.io-1949cf8c6b5b557f/codee-0.3.5/src/traits.rs:

@@ -1,0 +1,1 @@
+TypedChildrenFn<leptos::html::HtmlElement<leptos::html::Div, (Class<&str>,), ({closure@src/components/inspector.rs:31:22: 31:29},)>>
