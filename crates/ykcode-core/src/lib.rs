@@ -378,3 +378,109 @@ impl Default for Document {
         Self::new("Untitled Site")
     }
 }
+
+impl Document {
+    /// Insert a node as a child of the active page's root node.
+    pub fn insert_node(&mut self, node: Node) -> NodeId {
+        let id = node.id;
+
+        let parent_id = self
+            .active_page_id
+            .and_then(|pid| self.pages.iter().find(|p| p.id == pid))
+            .map(|p| p.root_node);
+
+        self.nodes.insert(id, node);
+
+        if let Some(parent_id) = parent_id {
+            if let Some(parent) = self.nodes.get_mut(&parent_id) {
+                parent.children.push(id);
+            }
+        }
+        id
+    }
+
+    /// Insert a node as a child of a specific parent node.
+    pub fn insert_node_into(&mut self, node: Node, parent_id: NodeId) -> NodeId {
+        let id = node.id;
+        self.nodes.insert(id, node);
+        if let Some(parent) = self.nodes.get_mut(&parent_id) {
+            parent.children.push(id);
+        }
+        id
+    }
+
+    /// Remove a node from the tree (detaches from parent, removes from map).
+    /// Children of the removed node are left as orphans (not recursively removed).
+    pub fn remove_node(&mut self, id: NodeId) {
+        for node in self.nodes.values_mut() {
+            node.children.retain(|&child| child != id);
+        }
+        self.nodes.remove(&id);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new_document_has_home_page() {
+        let doc = Document::new("MySite");
+        assert_eq!(doc.name, "MySite");
+        assert_eq!(doc.pages.len(), 1);
+        assert_eq!(doc.pages[0].name, "Home");
+        assert_eq!(doc.pages[0].slug, "/");
+    }
+
+    #[test]
+    fn active_page_returns_home() {
+        let doc = Document::default();
+        let page = doc.active_page().expect("must have active page");
+        assert_eq!(page.name, "Home");
+    }
+
+    #[test]
+    fn insert_node_adds_to_root_children() {
+        let mut doc = Document::default();
+        let node = Node::new(NodeKind::Button);
+        let id = doc.insert_node(node);
+
+        let root_id = doc.active_page().unwrap().root_node;
+        assert!(doc.node(&root_id).unwrap().children.contains(&id));
+        assert!(doc.node(&id).is_some());
+    }
+
+    #[test]
+    fn remove_node_detaches_and_deletes() {
+        let mut doc = Document::default();
+        let node = Node::new(NodeKind::Text);
+        let id = doc.insert_node(node);
+
+        let root_id = doc.active_page().unwrap().root_node;
+        assert!(doc.node(&root_id).unwrap().children.contains(&id));
+
+        doc.remove_node(id);
+        assert!(doc.node(&id).is_none());
+        assert!(!doc.node(&root_id).unwrap().children.contains(&id));
+    }
+
+    #[test]
+    fn insert_multiple_nodes_ordered() {
+        let mut doc = Document::default();
+        let id_a = doc.insert_node(Node::new(NodeKind::Section));
+        let id_b = doc.insert_node(Node::new(NodeKind::Stack));
+        let id_c = doc.insert_node(Node::new(NodeKind::Button));
+
+        let root_id = doc.active_page().unwrap().root_node;
+        let children = &doc.node(&root_id).unwrap().children;
+        assert_eq!(children, &[id_a, id_b, id_c]);
+    }
+
+    #[test]
+    fn node_defaults_are_visible_and_unlocked() {
+        let node = Node::new(NodeKind::Image);
+        assert!(node.visible);
+        assert!(!node.locked);
+        assert!(node.content.is_none());
+    }
+}

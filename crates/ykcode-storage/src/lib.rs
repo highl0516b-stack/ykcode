@@ -55,6 +55,49 @@ impl DocumentStore for MemoryStore {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ykcode_core::Document;
+
+    #[test]
+    fn memory_store_save_and_load() {
+        let store = MemoryStore::default();
+        let doc = Document::new("Test Doc");
+        let id = doc.id.to_string();
+
+        store.save(&doc).unwrap();
+        let loaded = store.load(&id).unwrap();
+        assert_eq!(loaded.name, "Test Doc");
+        assert_eq!(loaded.id, doc.id);
+    }
+
+    #[test]
+    fn memory_store_list_all() {
+        let store = MemoryStore::default();
+        store.save(&Document::new("A")).unwrap();
+        store.save(&Document::new("B")).unwrap();
+        let ids = store.list().unwrap();
+        assert_eq!(ids.len(), 2);
+    }
+
+    #[test]
+    fn memory_store_delete_removes_entry() {
+        let store = MemoryStore::default();
+        let doc = Document::new("Temp");
+        let id = doc.id.to_string();
+        store.save(&doc).unwrap();
+        store.delete(&id).unwrap();
+        assert!(matches!(store.load(&id), Err(StorageError::NotFound(_))));
+    }
+
+    #[test]
+    fn memory_store_not_found_error() {
+        let store = MemoryStore::default();
+        assert!(matches!(store.load("nope"), Err(StorageError::NotFound(_))));
+    }
+}
+
 /// Fjall-backed persistent store (native platforms only).
 #[cfg(feature = "native")]
 pub mod native {

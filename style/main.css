@@ -797,7 +797,203 @@ input {
 .yk-status__r { display: flex; align-items: center; gap: var(--sp-2); }
 
 /* ------------------------------------------------------------
-   13. Utility / misc
+   13. Canvas node rendering — Obsidian Spectrum on white artboard
+   ------------------------------------------------------------ */
+
+.yk-artboard {
+  --yk-node-surface: #fff;
+  --yk-node-ink: #1a1a2e;
+  --yk-node-muted: rgb(26 26 46 / 48%);
+  --yk-node-line: rgb(26 26 46 / 12%);
+}
+
+.yk-artboard__nodes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  padding: var(--sp-6);
+  min-height: 100%;
+}
+
+/* Base node */
+.yk-node {
+  position: relative;
+  box-sizing: border-box;
+  color: var(--yk-node-ink);
+  font-family: var(--font-ui);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  transition:
+    box-shadow var(--dur-fast),
+    outline-color var(--dur-fast);
+}
+
+/* Dashed hover border (4px dash pattern) */
+.yk-artboard[data-mode="edit"] .yk-node:hover:not(:has(.yk-node:hover)):not(.is-selected)::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: var(--r-sm);
+  background:
+    repeating-linear-gradient(90deg, var(--color-brand) 0 4px, transparent 4px 8px)
+      top / 100% 1px no-repeat,
+    repeating-linear-gradient(90deg, var(--color-brand) 0 4px, transparent 4px 8px)
+      bottom / 100% 1px no-repeat,
+    repeating-linear-gradient(180deg, var(--color-brand) 0 4px, transparent 4px 8px)
+      left / 1px 100% no-repeat,
+    repeating-linear-gradient(180deg, var(--color-brand) 0 4px, transparent 4px 8px)
+      right / 1px 100% no-repeat;
+}
+
+/* Selected state */
+.yk-node.is-selected {
+  z-index: var(--z-sel);
+  outline: 2px solid var(--color-brand);
+  outline-offset: 0;
+  box-shadow: 0 0 24px rgb(155 123 255 / 22%);
+}
+
+/* Section */
+.yk-node--section {
+  width: 100%;
+  min-height: 7.5rem;
+  padding: var(--sp-6);
+  background: var(--yk-node-surface);
+  border-color: var(--yk-node-line);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+/* Stack */
+.yk-node--stack {
+  min-width: 10rem;
+  min-height: 4rem;
+  padding: var(--sp-3);
+  background: color-mix(in srgb, var(--color-brand) 3%, white);
+  border-color: var(--yk-node-line);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+/* Text */
+.yk-node--text {
+  min-width: 7.5rem;
+  min-height: 2rem;
+  padding: var(--sp-1);
+  font-size: var(--text-base);
+  line-height: var(--lh-lg);
+  color: var(--yk-node-ink);
+}
+
+/* Button */
+.yk-node--button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  min-width: 6rem;
+  min-height: var(--touch-min);
+  padding: var(--sp-2) var(--sp-4);
+  color: var(--color-on-brand);
+  background: var(--color-brand);
+  border-radius: var(--r-md);
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+}
+
+/* Image placeholder */
+.yk-node--image {
+  display: grid;
+  place-items: center;
+  width: min(30rem, 100%);
+  min-height: 10rem;
+  background:
+    linear-gradient(135deg, transparent 48%, var(--yk-node-line) 49% 51%, transparent 52%),
+    color-mix(in srgb, var(--color-artboard) 80%, white);
+  border-color: var(--yk-node-line);
+  border-radius: var(--r-md);
+  aspect-ratio: 3 / 2;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--yk-node-muted);
+}
+
+/* Container */
+.yk-node--container {
+  min-width: 11.25rem;
+  min-height: 7.5rem;
+  padding: var(--sp-4);
+  background: rgb(255 255 255 / 72%);
+  border-color: var(--yk-node-line);
+  border-radius: var(--r-md);
+  display: grid;
+  gap: var(--sp-3);
+}
+
+/* Divider */
+.yk-node--divider {
+  width: 100%;
+  min-height: 1rem;
+  display: grid;
+  place-items: center;
+}
+
+.yk-node--divider::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--yk-node-line);
+}
+
+/* Spacer */
+.yk-node--spacer {
+  min-width: var(--sp-6);
+  min-height: var(--sp-8);
+  background: repeating-linear-gradient(
+    135deg,
+    rgb(155 123 255 / 8%) 0 4px,
+    transparent 4px 8px
+  );
+  border-radius: var(--r-sm);
+  display: grid;
+  place-items: center;
+  font-size: var(--text-xs);
+  color: var(--color-brand-active);
+  font-weight: var(--fw-semibold);
+}
+
+/* ------------------------------------------------------------
+   14. Properties actions
+   ------------------------------------------------------------ */
+.yk-props__actions {
+  padding: var(--sp-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.yk-btn--danger { color: var(--color-err); }
+.yk-btn--danger:hover { background: rgb(255 100 124 / 10%); }
+
+.yk-props__badge {
+  display: inline-block;
+  padding: 1px var(--sp-2);
+  background: var(--color-selected);
+  color: var(--color-brand);
+  border-radius: var(--r-pill);
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  margin-right: var(--sp-2);
+}
+
+/* ------------------------------------------------------------
+   15. Utility / misc
    ------------------------------------------------------------ */
 .yk-not-found {
   display: flex;
