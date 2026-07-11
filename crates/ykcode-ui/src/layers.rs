@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 use ykcode_core::{Document, NodeId, SiblingDirection};
 
-use crate::EditorCtx;
+use crate::{with_history, EditorCtx};
 
 #[derive(Clone)]
 struct LayerItem {
@@ -99,7 +99,7 @@ pub(crate) fn LayerTree() -> impl IntoView {
                                                 disabled=move || !can_up()
                                                 aria-label="Move up"
                                                 on:click=move |_| {
-                                                    ctx.document.update(|d| {
+                                                    with_history(ctx, |d| {
                                                         let _ = d.move_sibling(id, SiblingDirection::Up);
                                                     });
                                                 }
@@ -111,7 +111,7 @@ pub(crate) fn LayerTree() -> impl IntoView {
                                                 disabled=move || !can_down()
                                                 aria-label="Move down"
                                                 on:click=move |_| {
-                                                    ctx.document.update(|d| {
+                                                    with_history(ctx, |d| {
                                                         let _ =
                                                             d.move_sibling(id, SiblingDirection::Down);
                                                     });

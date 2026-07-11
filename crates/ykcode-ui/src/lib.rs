@@ -1,6 +1,8 @@
+mod autosave;
 mod canvas;
 mod dnd;
 mod editor;
+mod history;
 mod layers;
 mod palette;
 mod properties;
@@ -18,9 +20,32 @@ use ykcode_core::{Display, Document, FlexDirection, Node, NodeId, Size};
 
 use crate::editor::Editor;
 
+pub use history::{can_redo, can_undo, redo, undo, with_history};
+
 // ---------------------------------------------------------------------------
 // Editor context — shared reactive state
 // ---------------------------------------------------------------------------
+
+#[derive(Clone, PartialEq)]
+pub enum SaveStatus {
+    Idle,
+    Unsaved,
+    Saving,
+    Saved,
+    Error(String),
+}
+
+impl SaveStatus {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            SaveStatus::Idle => "idle",
+            SaveStatus::Unsaved => "unsaved",
+            SaveStatus::Saving => "saving",
+            SaveStatus::Saved => "saved",
+            SaveStatus::Error(_) => "error",
+        }
+    }
+}
 
 #[derive(Clone, Copy)]
 pub struct EditorCtx {
@@ -33,6 +58,10 @@ pub struct EditorCtx {
     pub document: RwSignal<Document>,
     pub drag_over_artboard: RwSignal<bool>,
     pub just_dropped: RwSignal<Option<NodeId>>,
+    pub save_status: RwSignal<SaveStatus>,
+    pub undo_stack: RwSignal<Vec<Document>>,
+    pub redo_stack: RwSignal<Vec<Document>>,
+    pub history_paused: RwSignal<bool>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

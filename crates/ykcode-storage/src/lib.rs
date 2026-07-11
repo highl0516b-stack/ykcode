@@ -101,54 +101,65 @@ mod tests {
 /// Fjall-backed persistent store (native platforms only).
 #[cfg(feature = "native")]
 pub mod native {
-    use super::*;
-    use fjall::{Config, Keyspace};
+    use std::path::Path;
+
+    use super::{Document, DocumentStore, StorageError};
+    use anyhow::Result;
+    use fjall::{Database, Keyspace, KeyspaceCreateOptions, PersistMode};
+
+    const KEYSPACE_NAME: &str = "documents";
 
     pub struct FjallStore {
-        keyspace: Keyspace,
-        partition: fjall::PartitionHandle,
+        db: Database,
+        docs: Keyspace,
     }
 
     impl FjallStore {
-        pub fn open(path: impl AsRef<std::path::Path>) -> Result<Self> {
-            let keyspace = Config::new(path).open()?;
-            let partition = keyspace.open_partition("documents", Default::default())?;
-            Ok(Self {
-                keyspace,
-                partition,
-            })
+        pub fn open(path: impl AsRef<Path>) -> Result<Self> {
+            let db = Database::builder(path).open()?;
+            let docs = db.keyspace(KEYSPACE_NAME, KeyspaceCreateOptions::default)?;
+            Ok(Self { db, docs })
         }
     }
 
     impl DocumentStore for FjallStore {
         fn save(&self, doc: &Document) -> Result<(), StorageError> {
-            let json = serde_json::to_vec(doc)?;
-            self.partition.insert(doc.id.to_string(), json)?;
-            self.keyspace.persist(fjall::PersistMode::SyncAll)?;
+            let bytes = serde_json::to_vec(doc)?;
+            self.docs
+                .insert(doc.id.to_string(), bytes)
+                .map_err(|e| StorageError::Backend(e.into()))?;
+            self.db
+                .persist(PersistMode::SyncAll)
+                .map_err(|e| StorageError::Backend(e.into()))?;
             Ok(())
         }
 
         fn load(&self, id: &str) -> Result<Document, StorageError> {
             let bytes = self
-                .partition
-                .get(id)?
+                .docs
+                .get(id)
+                .map_err(|e| StorageError::Backend(e.into()))?
                 .ok_or_else(|| StorageError::NotFound(id.to_string()))?;
-            let doc = serde_json::from_slice(&bytes)?;
-            Ok(doc)
+            Ok(serde_json::from_slice(&bytes)?)
         }
 
         fn list(&self) -> Result<Vec<String>, StorageError> {
             let ids = self
-                .partition
+                .docs
                 .iter()
-                .filter_map(|item| item.ok())
-                .map(|(key, _)| String::from_utf8_lossy(&key).to_string())
+                .filter_map(|g| g.key().ok())
+                .map(|k| String::from_utf8_lossy(&k).into_owned())
                 .collect();
             Ok(ids)
         }
 
         fn delete(&self, id: &str) -> Result<(), StorageError> {
-            self.partition.remove(id)?;
+            self.docs
+                .remove(id)
+                .map_err(|e| StorageError::Backend(e.into()))?;
+            self.db
+                .persist(PersistMode::SyncAll)
+                .map_err(|e| StorageError::Backend(e.into()))?;
             Ok(())
         }
     }

@@ -3,7 +3,7 @@ use ykcode_core::{Document, NodeId, NodeKind};
 
 use crate::dnd::{kind_from_payload, node_with_defaults, MIME_FALLBACK, MIME_KIND};
 use crate::node_inline_style;
-use crate::EditorCtx;
+use crate::{with_history, EditorCtx};
 
 fn default_node_content(kind: &NodeKind) -> Option<String> {
     match kind {
@@ -51,8 +51,8 @@ fn EditableLeafNode(
 
     let commit = move || {
         let text = draft.get();
-        ctx.document.update(|d| {
-            if let Some(n) = d.nodes.get_mut(&node_id) {
+        with_history(ctx, |doc| {
+            if let Some(n) = doc.nodes.get_mut(&node_id) {
                 n.content = Some(text);
             }
         });
@@ -231,7 +231,7 @@ pub(crate) fn CanvasArea() -> impl IntoView {
                         if let Some(label) = kind_label {
                             let node = node_with_defaults(kind_from_payload(&label));
                             let new_id = node.id;
-                            ctx.document.update(|doc| {
+                            with_history(ctx, |doc| {
                                 let parent_id = doc
                                     .active_page_id
                                     .and_then(|pid| doc.pages.iter().find(|p| p.id == pid))

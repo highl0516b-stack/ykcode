@@ -10,6 +10,7 @@ path = "src/main.rs"
 
 [dependencies]
 ykcode-core.workspace = true
+ykcode-storage = { workspace = true, features = ["native"] }
 ykcode-ui = { workspace = true, features = ["ssr"] }
 ykcode-server.workspace = true
 leptos = { workspace = true, features = ["ssr"] }

@@ -6,7 +6,7 @@ rust-version.workspace = true
 
 [features]
 default = []
-native = ["dep:fjall", "dep:tokio"]
+native = ["dep:fjall"]
 
 [dependencies]
 ykcode-core.workspace = true
@@ -15,4 +15,3 @@ serde_json.workspace = true
 thiserror.workspace = true
 anyhow.workspace = true
 fjall = { workspace = true, optional = true }
-tokio = { workspace = true, optional = true }

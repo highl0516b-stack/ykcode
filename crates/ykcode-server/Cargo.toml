@@ -6,6 +6,8 @@ rust-version.workspace = true
 
 [dependencies]
 ykcode-core.workspace = true
+ykcode-storage.workspace = true
+leptos_config.workspace = true
 axum.workspace = true
 tokio.workspace = true
 tower.workspace = true

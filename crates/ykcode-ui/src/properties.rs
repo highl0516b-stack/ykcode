@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 use ykcode_core::FlexDirection;
 
-use crate::EditorCtx;
+use crate::{with_history, EditorCtx};
 
 #[component]
 pub(crate) fn PropertiesPanel() -> impl IntoView {
@@ -82,7 +82,7 @@ fn NodeInspector() -> impl IntoView {
 
     let set_direction = move |dir: FlexDirection| {
         if let Some(id) = ctx.selected_node.get() {
-            ctx.document.update(|d| {
+            with_history(ctx, |d| {
                 if let Some(n) = d.nodes.get_mut(&id) {
                     n.layout.direction = dir;
                 }
@@ -151,7 +151,7 @@ fn NodeInspector() -> impl IntoView {
                                                         let v = v.clamp(0.0, 500.0);
                                                         gap_val.set(v);
                                                         if let Some(sel_id) = ctx.selected_node.get() {
-                                                            ctx.document.update(|d| {
+                                                            with_history(ctx, |d| {
                                                                 if let Some(node) = d.nodes.get_mut(&sel_id) {
                                                                     node.layout.gap = v;
                                                                 }
@@ -182,7 +182,7 @@ fn NodeInspector() -> impl IntoView {
                                                         let opacity = (v / 100.0).clamp(0.0, 1.0);
                                                         opacity_val.set(opacity);
                                                         if let Some(sel_id) = ctx.selected_node.get() {
-                                                            ctx.document.update(|d| {
+                                                            with_history(ctx, |d| {
                                                                 if let Some(node) = d.nodes.get_mut(&sel_id) {
                                                                     node.appearance.opacity = opacity;
                                                                 }
@@ -201,7 +201,7 @@ fn NodeInspector() -> impl IntoView {
                                             class="yk-btn yk-btn--ghost yk-btn--danger"
                                             on:click=move |_| {
                                                 if let Some(sel_id) = ctx.selected_node.get() {
-                                                    ctx.document.update(|doc| doc.remove_node(sel_id));
+                                                    with_history(ctx, |doc| doc.remove_node(sel_id));
                                                     ctx.selected_node.set(None);
                                                 }
                                             }

@@ -2,7 +2,7 @@ use leptos::prelude::*;
 use ykcode_core::NodeKind;
 
 use crate::dnd::{node_with_defaults, MIME_FALLBACK, MIME_KIND};
-use crate::EditorCtx;
+use crate::{with_history, EditorCtx};
 
 #[derive(Clone, PartialEq)]
 struct PaletteEntry {
@@ -110,7 +110,7 @@ pub(crate) fn ComponentPalette() -> impl IntoView {
                                 on:click=move |_| {
                                     let node = node_with_defaults(kind_from_label(entry.label));
                                     let new_id = node.id;
-                                    ctx.document.update(|doc| {
+                                    with_history(ctx, |doc| {
                                         doc.insert_node(node);
                                     });
                                     ctx.selected_node.set(Some(new_id));

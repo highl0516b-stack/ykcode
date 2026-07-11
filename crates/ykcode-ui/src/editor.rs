@@ -5,7 +5,7 @@ use crate::layers::LayerTree;
 use crate::palette::ComponentPalette;
 use crate::properties::PropertiesPanel;
 use crate::toolbar::Toolbar;
-use crate::{EditorCtx, LeftTab};
+use crate::{EditorCtx, LeftTab, SaveStatus};
 
 #[component]
 pub(crate) fn Editor() -> impl IntoView {
@@ -19,8 +19,15 @@ pub(crate) fn Editor() -> impl IntoView {
         document: RwSignal::new(ykcode_core::Document::default()),
         drag_over_artboard: RwSignal::new(false),
         just_dropped: RwSignal::new(None),
+        save_status: RwSignal::new(SaveStatus::Idle),
+        undo_stack: RwSignal::new(Vec::new()),
+        redo_stack: RwSignal::new(Vec::new()),
+        history_paused: RwSignal::new(false),
     };
     provide_context(ctx);
+
+    #[cfg(feature = "hydrate")]
+    crate::autosave::provide_autosave(ctx);
 
     view! {
         <div class="yk-shell">
@@ -82,6 +89,15 @@ fn LeftPanel() -> impl IntoView {
 #[component]
 pub(crate) fn StatusBar() -> impl IntoView {
     let ctx = use_context::<EditorCtx>().expect("EditorCtx missing");
+
+    let save_label = move || match ctx.save_status.get() {
+        SaveStatus::Idle => "All changes saved".to_string(),
+        SaveStatus::Unsaved => "Unsaved changes".to_string(),
+        SaveStatus::Saving => "Saving…".to_string(),
+        SaveStatus::Saved => "Saved".to_string(),
+        SaveStatus::Error(e) => format!("Error: {}", e),
+    };
+
     let node_count = move || {
         ctx.document.with(|d| {
             d.active_page()
@@ -93,15 +109,20 @@ pub(crate) fn StatusBar() -> impl IntoView {
 
     view! {
         <footer class="yk-status">
-            <span class="yk-status__l">"● Auto-saved"</span>
+            <div
+                class="yk-status__l yk-save"
+                data-save-state=move || ctx.save_status.with(|s| s.as_str())
+            >
+                <span class="yk-save__mark" aria-hidden="true"/>
+                <span class="yk-save__label" role="status" aria-live="polite">
+                    {save_label}
+                </span>
+            </div>
             <span class="yk-status__r">
                 {move || {
-                    let count = node_count();
-                    if count == 0 {
-                        "Empty page".into()
-                    } else {
-                        format!("{count} component{}", if count == 1 { "" } else { "s" })
-                    }
+                    let n = node_count();
+                    if n == 0 { "Empty page".into() }
+                    else { format!("{n} component{}", if n == 1 { "" } else { "s" }) }
                 }}
             </span>
         </footer>

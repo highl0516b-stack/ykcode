@@ -47,6 +47,7 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # WASM
 wasm-bindgen = { version = "0.2.126" }
+gloo-net = { version = "0.6.0", default-features = false, features = ["http"] }
 web-sys = { version = "0.3.103", features = ["DataTransfer"] }
 js-sys = { version = "0.3.103" }
 

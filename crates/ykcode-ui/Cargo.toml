@@ -7,7 +7,7 @@ rust-version.workspace = true
 [features]
 default = []
 ssr = ["dep:leptos_axum", "dep:leptos_config", "leptos/ssr", "leptos_meta/ssr", "leptos_router/ssr"]
-hydrate = ["leptos/hydrate"]
+hydrate = ["leptos/hydrate", "dep:gloo-net", "dep:web-sys"]
 
 [dependencies]
 ykcode-core.workspace = true
@@ -17,5 +17,7 @@ leptos_router.workspace = true
 leptos_axum = { workspace = true, optional = true }
 leptos_config = { workspace = true, optional = true }
 serde.workspace = true
+serde_json.workspace = true
 uuid.workspace = true
-web-sys = { workspace = true, features = ["DataTransfer"] }
+gloo-net = { workspace = true, optional = true }
+web-sys = { workspace = true, optional = true, features = ["DataTransfer"] }

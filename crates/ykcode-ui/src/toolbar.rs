@@ -1,6 +1,6 @@
 use leptos::prelude::*;
 
-use crate::EditorCtx;
+use crate::{can_redo, can_undo, redo, undo, with_history, EditorCtx};
 
 #[component]
 pub(crate) fn Toolbar() -> impl IntoView {
@@ -16,7 +16,7 @@ pub(crate) fn Toolbar() -> impl IntoView {
     let commit_rename = move |_| {
         let name = draft_name.get().trim().to_string();
         if !name.is_empty() {
-            ctx.document.update(|d| d.name = name);
+            with_history(ctx, |doc| doc.name = name);
         }
         is_editing_name.set(false);
     };
@@ -86,8 +86,24 @@ pub(crate) fn Toolbar() -> impl IntoView {
             </nav>
 
             <div class="yk-toolbar__end">
-                <button class="yk-btn yk-btn--ghost" aria-label="Undo">"↩"</button>
-                <button class="yk-btn yk-btn--ghost" aria-label="Redo">"↪"</button>
+                <button
+                    class="yk-btn yk-btn--ghost"
+                    aria-label="Undo (Ctrl+Z)"
+                    aria-keyshortcuts="Control+Z"
+                    disabled=move || !can_undo(ctx)()
+                    on:click=move |_| undo(ctx)
+                >
+                    "↩"
+                </button>
+                <button
+                    class="yk-btn yk-btn--ghost"
+                    aria-label="Redo (Ctrl+Shift+Z)"
+                    aria-keyshortcuts="Control+Shift+Z"
+                    disabled=move || !can_redo(ctx)()
+                    on:click=move |_| redo(ctx)
+                >
+                    "↪"
+                </button>
                 <div class="yk-toolbar__sep"/>
                 <button class="yk-btn yk-btn--secondary">"Preview"</button>
                 <button class="yk-btn yk-btn--primary">"Publish"</button>
