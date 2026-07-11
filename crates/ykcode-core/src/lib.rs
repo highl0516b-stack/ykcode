@@ -417,6 +417,59 @@ impl Document {
         }
         self.nodes.remove(&id);
     }
+
+    /// Find the parent node of `child` (node whose children vec contains `child`).
+    pub fn parent_of(&self, child: NodeId) -> Option<NodeId> {
+        self.nodes
+            .iter()
+            .find(|(_, n)| n.children.contains(&child))
+            .map(|(id, _)| *id)
+    }
+
+    /// Swap a node one position up/down among its parent's children.
+    pub fn move_sibling(
+        &mut self,
+        child: NodeId,
+        direction: SiblingDirection,
+    ) -> Result<(), MoveError> {
+        let parent_id = self.parent_of(child).ok_or(MoveError::NoParent)?;
+        let parent = self
+            .nodes
+            .get_mut(&parent_id)
+            .ok_or(MoveError::NodeNotFound)?;
+        let idx = parent
+            .children
+            .iter()
+            .position(|&id| id == child)
+            .ok_or(MoveError::NodeNotFound)?;
+        match direction {
+            SiblingDirection::Up if idx == 0 => Err(MoveError::AlreadyAtEdge),
+            SiblingDirection::Up => {
+                parent.children.swap(idx, idx - 1);
+                Ok(())
+            }
+            SiblingDirection::Down if idx + 1 >= parent.children.len() => {
+                Err(MoveError::AlreadyAtEdge)
+            }
+            SiblingDirection::Down => {
+                parent.children.swap(idx, idx + 1);
+                Ok(())
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SiblingDirection {
+    Up,
+    Down,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum MoveError {
+    NodeNotFound,
+    NoParent,
+    AlreadyAtEdge,
 }
 
 #[cfg(test)]
@@ -482,5 +535,63 @@ mod tests {
         assert!(node.visible);
         assert!(!node.locked);
         assert!(node.content.is_none());
+    }
+
+    #[test]
+    fn parent_of_returns_root_parent() {
+        let mut doc = Document::default();
+        let child_id = doc.insert_node(Node::new(NodeKind::Text));
+        let root_id = doc.active_page().unwrap().root_node;
+        assert_eq!(doc.parent_of(child_id), Some(root_id));
+    }
+
+    #[test]
+    fn parent_of_returns_none_for_root() {
+        let doc = Document::default();
+        let root_id = doc.active_page().unwrap().root_node;
+        assert_eq!(doc.parent_of(root_id), None);
+    }
+
+    #[test]
+    fn move_sibling_swaps_up_and_down() {
+        let mut doc = Document::default();
+        let id_a = doc.insert_node(Node::new(NodeKind::Text));
+        let id_b = doc.insert_node(Node::new(NodeKind::Button));
+        let id_c = doc.insert_node(Node::new(NodeKind::Stack));
+        let root_id = doc.active_page().unwrap().root_node;
+
+        assert_eq!(doc.node(&root_id).unwrap().children, &[id_a, id_b, id_c]);
+
+        doc.move_sibling(id_b, SiblingDirection::Up).unwrap();
+        assert_eq!(doc.node(&root_id).unwrap().children, &[id_b, id_a, id_c]);
+
+        doc.move_sibling(id_b, SiblingDirection::Down).unwrap();
+        assert_eq!(doc.node(&root_id).unwrap().children, &[id_a, id_b, id_c]);
+    }
+
+    #[test]
+    fn move_sibling_at_edge_returns_error() {
+        let mut doc = Document::default();
+        let id_a = doc.insert_node(Node::new(NodeKind::Text));
+        let id_b = doc.insert_node(Node::new(NodeKind::Button));
+
+        assert_eq!(
+            doc.move_sibling(id_a, SiblingDirection::Up),
+            Err(MoveError::AlreadyAtEdge)
+        );
+        assert_eq!(
+            doc.move_sibling(id_b, SiblingDirection::Down),
+            Err(MoveError::AlreadyAtEdge)
+        );
+    }
+
+    #[test]
+    fn move_sibling_no_parent_for_root() {
+        let mut doc = Document::default();
+        let root_id = doc.active_page().unwrap().root_node;
+        assert_eq!(
+            doc.move_sibling(root_id, SiblingDirection::Up),
+            Err(MoveError::NoParent)
+        );
     }
 }

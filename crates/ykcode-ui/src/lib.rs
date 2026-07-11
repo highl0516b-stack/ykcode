@@ -6,7 +6,7 @@ use leptos_router::{
     components::{Route, Router, Routes},
     StaticSegment,
 };
-use ykcode_core::{Document, Node, NodeId, NodeKind, Size};
+use ykcode_core::{Document, FlexDirection, Node, NodeId, NodeKind, SiblingDirection};
 
 // ---------------------------------------------------------------------------
 // Editor context — shared reactive state
@@ -19,6 +19,7 @@ pub struct EditorCtx {
     pub active_left_tab: RwSignal<LeftTab>,
     pub zoom: RwSignal<f32>,
     pub selected_node: RwSignal<Option<NodeId>>,
+    pub editing_node: RwSignal<Option<NodeId>>,
     pub document: RwSignal<Document>,
 }
 
@@ -86,6 +87,7 @@ fn Editor() -> impl IntoView {
         active_left_tab: RwSignal::new(LeftTab::Components),
         zoom: RwSignal::new(100.0f32),
         selected_node: RwSignal::new(None),
+        editing_node: RwSignal::new(None),
         document: RwSignal::new(Document::default()),
     };
     provide_context(ctx);
@@ -110,14 +112,69 @@ fn Editor() -> impl IntoView {
 #[component]
 fn Toolbar() -> impl IntoView {
     let ctx = use_context::<EditorCtx>().expect("EditorCtx missing");
-    let doc_name = move || ctx.document.with(|d| d.name.clone());
+    let is_editing_name = RwSignal::new(false);
+    let draft_name = RwSignal::new(String::new());
+
+    let start_rename = move |_| {
+        draft_name.set(ctx.document.with(|d| d.name.clone()));
+        is_editing_name.set(true);
+    };
+
+    let commit_rename = move |_| {
+        let name = draft_name.get().trim().to_string();
+        if !name.is_empty() {
+            ctx.document.update(|d| d.name = name);
+        }
+        is_editing_name.set(false);
+    };
+
+    let cancel_rename = move |_| {
+        is_editing_name.set(false);
+    };
 
     view! {
         <header class="yk-toolbar">
             <div class="yk-toolbar__start">
                 <span class="yk-brand">"yk"</span>
                 <div class="yk-toolbar__sep"/>
-                <span class="yk-toolbar__doc">{doc_name}</span>
+                {move || {
+                    if is_editing_name.get() {
+                        view! {
+                            <input
+                                class="yk-toolbar__doc-input"
+                                type="text"
+                                prop:value=move || draft_name.get()
+                                on:input=move |ev| draft_name.set(event_target_value(&ev))
+                                on:blur=move |_| commit_rename(())
+                                on:keydown=move |ev| {
+                                    match ev.key().as_str() {
+                                        "Enter" => {
+                                            ev.prevent_default();
+                                            commit_rename(());
+                                        }
+                                        "Escape" => {
+                                            ev.prevent_default();
+                                            cancel_rename(());
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                                autofocus
+                            />
+                        }
+                        .into_any()
+                    } else {
+                        view! {
+                            <button
+                                class="yk-toolbar__doc"
+                                on:click=start_rename
+                            >
+                                {move || ctx.document.with(|d| d.name.clone())}
+                            </button>
+                        }
+                        .into_any()
+                    }
+                }}
             </div>
 
             <nav class="yk-toolbar__center" aria-label="Breakpoints">
@@ -367,6 +424,95 @@ fn default_node_content(kind: &NodeKind) -> Option<String> {
     }
 }
 
+#[component]
+fn EditableLeafNode(
+    node_id: NodeId,
+    kind_class: String,
+    kind_label: &'static str,
+) -> impl IntoView {
+    let ctx = use_context::<EditorCtx>().expect("EditorCtx missing");
+
+    let current_content = move || {
+        ctx.document.with(|d| {
+            d.node(&node_id)
+                .and_then(|n| n.content.clone())
+                .unwrap_or_else(|| "...".into())
+        })
+    };
+
+    let draft = RwSignal::new(String::new());
+    let is_editing = move || ctx.editing_node.get() == Some(node_id);
+    let is_selected = move || ctx.selected_node.get() == Some(node_id);
+
+    let start_edit = move || {
+        draft.set(ctx.document.with(|d| {
+            d.node(&node_id)
+                .and_then(|n| n.content.clone())
+                .unwrap_or_default()
+        }));
+        ctx.editing_node.set(Some(node_id));
+    };
+
+    let commit = move || {
+        let text = draft.get();
+        ctx.document.update(|d| {
+            if let Some(n) = d.nodes.get_mut(&node_id) {
+                n.content = Some(text);
+            }
+        });
+        ctx.editing_node.set(None);
+    };
+
+    let cancel = move || ctx.editing_node.set(None);
+
+    view! {
+        <div
+            class=kind_class
+            class:is-selected=is_selected
+            class:is-editing=is_editing
+            data-kind=kind_label
+            on:click=move |ev| {
+                ev.stop_propagation();
+                ctx.selected_node.set(Some(node_id));
+            }
+            on:dblclick=move |ev| {
+                ev.stop_propagation();
+                start_edit();
+            }
+        >
+            {move || {
+                if is_editing() {
+                    view! {
+                        <input
+                            type="text"
+                            class="yk-inline-edit"
+                            prop:value=move || draft.get()
+                            on:input=move |ev| draft.set(event_target_value(&ev))
+                            on:blur=move |_| commit()
+                            on:keydown=move |ev| {
+                                match ev.key().as_str() {
+                                    "Enter" => {
+                                        ev.prevent_default();
+                                        commit();
+                                    }
+                                    "Escape" => {
+                                        ev.prevent_default();
+                                        cancel();
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        />
+                    }
+                    .into_any()
+                } else {
+                    view! { <span>{current_content()}</span> }.into_any()
+                }
+            }}
+        </div>
+    }
+}
+
 fn render_node(doc: &Document, id: NodeId, ctx: EditorCtx) -> AnyView {
     let Some(node) = doc.node(&id) else {
         return view! { <span/> }.into_any();
@@ -375,8 +521,14 @@ fn render_node(doc: &Document, id: NodeId, ctx: EditorCtx) -> AnyView {
     let kind = node.kind.clone();
     let kind_class = format!("yk-node yk-node--{}", kind.label().to_lowercase());
     let kind_label = kind.label();
-    let content = node.content.clone().or_else(|| default_node_content(&kind));
     let children_ids = node.children.clone();
+
+    if matches!(kind, NodeKind::Text | NodeKind::Button) && children_ids.is_empty() {
+        return view! { <EditableLeafNode node_id=id kind_class=kind_class kind_label/> }
+            .into_any();
+    }
+
+    let content = node.content.clone().or_else(|| default_node_content(&kind));
     let has_content = content.is_some();
 
     let child_views: Vec<AnyView> = children_ids
@@ -470,20 +622,85 @@ fn LayerTree() -> impl IntoView {
                 key=|item| item.id.0.to_string()
                 children=move |item| {
                     let id = item.id;
+                    let depth = item.depth;
                     let is_selected = move || ctx.selected_node.get() == Some(id);
-                    let indent = format!("padding-left:{}rem", item.depth as f32 * 0.875);
+                    let indent = format!("padding-left:{}rem", depth as f32 * 0.875);
+
+                    let can_up = move || {
+                        ctx.document.with(|d| {
+                            d.parent_of(id)
+                                .and_then(|pid| d.node(&pid))
+                                .and_then(|p| p.children.iter().position(|&c| c == id))
+                                .map(|i| i > 0)
+                                .unwrap_or(false)
+                        })
+                    };
+
+                    let can_down = move || {
+                        ctx.document.with(|d| {
+                            d.parent_of(id)
+                                .and_then(|pid| d.node(&pid))
+                                .map(|p| {
+                                    p.children
+                                        .iter()
+                                        .position(|&c| c == id)
+                                        .map(|i| i + 1 < p.children.len())
+                                        .unwrap_or(false)
+                                })
+                                .unwrap_or(false)
+                        })
+                    };
+
                     view! {
-                        <button
-                            class="yk-layer-row"
-                            class:yk-layer-row--selected=is_selected
-                            style=indent
-                            on:click=move |_| ctx.selected_node.set(Some(id))
-                        >
-                            <span class="yk-layer-icon" aria-hidden="true">
-                                {item.icon}
-                            </span>
-                            <span class="yk-layer-name">{item.name}</span>
-                        </button>
+                        <div class="yk-layer-wrap">
+                            <button
+                                class="yk-layer-row"
+                                class:yk-layer-row--selected=is_selected
+                                style=indent
+                                on:click=move |_| ctx.selected_node.set(Some(id))
+                            >
+                                <span class="yk-layer-icon" aria-hidden="true">
+                                    {item.icon}
+                                </span>
+                                <span class="yk-layer-name">{item.name}</span>
+                            </button>
+                            {move || {
+                                if is_selected() {
+                                    view! {
+                                        <div class="yk-layer-reorder">
+                                            <button
+                                                class="yk-reorder-btn"
+                                                disabled=move || !can_up()
+                                                aria-label="Move up"
+                                                on:click=move |_| {
+                                                    ctx.document.update(|d| {
+                                                        let _ = d.move_sibling(id, SiblingDirection::Up);
+                                                    });
+                                                }
+                                            >
+                                                "↑"
+                                            </button>
+                                            <button
+                                                class="yk-reorder-btn"
+                                                disabled=move || !can_down()
+                                                aria-label="Move down"
+                                                on:click=move |_| {
+                                                    ctx.document.update(|d| {
+                                                        let _ =
+                                                            d.move_sibling(id, SiblingDirection::Down);
+                                                    });
+                                                }
+                                            >
+                                                "↓"
+                                            </button>
+                                        </div>
+                                    }
+                                    .into_any()
+                                } else {
+                                    view! { <span/> }.into_any()
+                                }
+                            }}
+                        </div>
                     }
                 }
             />
@@ -643,6 +860,42 @@ fn PageInspector() -> impl IntoView {
 fn NodeInspector() -> impl IntoView {
     let ctx = use_context::<EditorCtx>().expect("EditorCtx missing");
 
+    let gap_val = RwSignal::new(0.0f32);
+    let opacity_val = RwSignal::new(1.0f32);
+
+    Effect::new(move |_| {
+        if let Some(id) = ctx.selected_node.get() {
+            gap_val.set(
+                ctx.document
+                    .with(|d| d.node(&id).map(|n| n.layout.gap).unwrap_or(0.0)),
+            );
+            opacity_val.set(
+                ctx.document
+                    .with(|d| d.node(&id).map(|n| n.appearance.opacity).unwrap_or(1.0)),
+            );
+        }
+    });
+
+    let direction_str = move || {
+        ctx.selected_node
+            .get()
+            .and_then(|id| {
+                ctx.document
+                    .with(|d| d.node(&id).map(|n| format!("{:?}", n.layout.direction)))
+            })
+            .unwrap_or_default()
+    };
+
+    let set_direction = move |dir: FlexDirection| {
+        if let Some(id) = ctx.selected_node.get() {
+            ctx.document.update(|d| {
+                if let Some(n) = d.nodes.get_mut(&id) {
+                    n.layout.direction = dir;
+                }
+            });
+        }
+    };
+
     view! {
         {move || {
             ctx.selected_node
@@ -652,12 +905,6 @@ fn NodeInspector() -> impl IntoView {
                         d.node(&id).map(|n| {
                             let name = n.name.clone();
                             let kind = n.kind.label();
-                            let display = format!("{:?}", n.layout.display);
-                            let direction = format!("{:?}", n.layout.direction);
-                            let width = size_label(&n.layout.width);
-                            let height = size_label(&n.layout.height);
-                            let opacity =
-                                format!("{}%", (n.appearance.opacity * 100.0) as u32);
                             let bg = n
                                 .appearance
                                 .background
@@ -672,16 +919,88 @@ fn NodeInspector() -> impl IntoView {
                                         {name}
                                     </div>
                                     <PropSection title="Layout">
-                                        <PropRow label="Display" value=display/>
-                                        <PropRow label="Direction" value=direction/>
-                                    </PropSection>
-                                    <PropSection title="Size">
-                                        <PropRow label="Width" value=width/>
-                                        <PropRow label="Height" value=height/>
+                                        <div class="yk-prop-row">
+                                            <span class="yk-prop-label">"Direction"</span>
+                                            <div class="yk-direction-toggle" role="group" aria-label="Direction">
+                                                <button
+                                                    class="yk-dir-btn"
+                                                    class:yk-dir-btn--on=move || direction_str() == "Column"
+                                                    aria-pressed=move || direction_str() == "Column"
+                                                    on:click=move |_| set_direction(FlexDirection::Column)
+                                                >
+                                                    "↕ Col"
+                                                </button>
+                                                <button
+                                                    class="yk-dir-btn"
+                                                    class:yk-dir-btn--on=move || direction_str() == "Row"
+                                                    aria-pressed=move || direction_str() == "Row"
+                                                    on:click=move |_| set_direction(FlexDirection::Row)
+                                                >
+                                                    "↔ Row"
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="yk-prop-row">
+                                            <span class="yk-prop-label">"Gap"</span>
+                                            <div class="yk-scrub-field">
+                                                <input
+                                                    type="number"
+                                                    class="yk-scrub-input"
+                                                    min="0"
+                                                    max="500"
+                                                    step="1"
+                                                    prop:value=move || gap_val.get().to_string()
+                                                    on:input=move |ev| {
+                                                        let Ok(v) = event_target_value(&ev).parse::<f32>() else {
+                                                            return;
+                                                        };
+                                                        let v = v.clamp(0.0, 500.0);
+                                                        gap_val.set(v);
+                                                        if let Some(sel_id) = ctx.selected_node.get() {
+                                                            ctx.document.update(|d| {
+                                                                if let Some(node) = d.nodes.get_mut(&sel_id) {
+                                                                    node.layout.gap = v;
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                                />
+                                                <span class="yk-scrub-unit">"px"</span>
+                                            </div>
+                                        </div>
                                     </PropSection>
                                     <PropSection title="Appearance">
                                         <PropRow label="Background" value=bg/>
-                                        <PropRow label="Opacity" value=opacity/>
+                                        <div class="yk-prop-row">
+                                            <span class="yk-prop-label">"Opacity"</span>
+                                            <div class="yk-opacity-ctrl">
+                                                <input
+                                                    type="range"
+                                                    class="yk-opacity-range"
+                                                    min="0"
+                                                    max="100"
+                                                    step="1"
+                                                    prop:value=move || (opacity_val.get() * 100.0) as u32
+                                                    on:input=move |ev| {
+                                                        let Ok(v) = event_target_value(&ev).parse::<f32>() else {
+                                                            return;
+                                                        };
+                                                        let opacity = (v / 100.0).clamp(0.0, 1.0);
+                                                        opacity_val.set(opacity);
+                                                        if let Some(sel_id) = ctx.selected_node.get() {
+                                                            ctx.document.update(|d| {
+                                                                if let Some(node) = d.nodes.get_mut(&sel_id) {
+                                                                    node.appearance.opacity = opacity;
+                                                                }
+                                                            });
+                                                        }
+                                                    }
+                                                />
+                                                <span class="yk-opacity-val">
+                                                    {move || format!("{}%", (opacity_val.get() * 100.0) as u32)}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </PropSection>
                                     <div class="yk-props__actions">
                                         <button
@@ -702,15 +1021,6 @@ fn NodeInspector() -> impl IntoView {
                     })
                 })
         }}
-    }
-}
-
-fn size_label(size: &Size) -> String {
-    match size {
-        Size::Auto => "Auto".into(),
-        Size::Fill => "Fill".into(),
-        Size::Fixed(v) => format!("{v} px"),
-        Size::Percent(v) => format!("{v}%"),
     }
 }
 
