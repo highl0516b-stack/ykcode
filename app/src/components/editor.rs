@@ -1,7 +1,5 @@
 use leptos::prelude::*;
-use shared::{
-    Artboard, CanvasComponent, ComponentId, DisclosureLevel, Project, ViewportTransform,
-};
+use shared::{Artboard, CanvasComponent, ComponentId, DisclosureLevel, Project, ViewportTransform};
 
 use super::{
     canvas::CanvasViewport,

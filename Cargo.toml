@@ -92,6 +92,7 @@ app    = { path = "app" }
 # ── cargo-leptos workspace project ────────────────────────────────────────────
 [[workspace.metadata.leptos]]
 name            = "ykcode"
+output-name     = "ykcode"
 bin-package     = "server"
 lib-package     = "app"
 site-root       = "target/site"

@@ -56,7 +56,6 @@ fn ComponentNode(
     let bounds = component.bounds.clone();
     let kind_label = format!("{:?}", component.kind);
     let name = component.name.clone();
-    let name2 = component.name.clone();
     let opacity = component.style.opacity;
     let rotation = component.rotation;
 
@@ -73,10 +72,9 @@ fn ComponentNode(
                 e.stop_propagation();
                 on_select();
             }
-            aria-label=name
             data-kind=kind_label
         >
-            <span class="canvas-node__label">{name2}</span>
+            <span class="canvas-node__label">{name}</span>
         </div>
     }
 }

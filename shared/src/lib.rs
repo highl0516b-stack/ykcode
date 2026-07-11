@@ -383,3 +383,113 @@ pub enum GesturePhase {
         center_y: f32,
     },
 }
+
+// ── Unit tests ────────────────────────────────────────────────────────────────
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn viewport_zoom_around_clamps_to_min() {
+        let mut t = ViewportTransform::default();
+        // Zoom out far beyond min
+        for _ in 0..30 {
+            t.zoom_around(-0.5, 0.0, 0.0);
+        }
+        assert!(
+            t.scale >= ViewportTransform::MIN_SCALE,
+            "scale {} below minimum {}",
+            t.scale,
+            ViewportTransform::MIN_SCALE
+        );
+    }
+
+    #[test]
+    fn viewport_zoom_around_clamps_to_max() {
+        let mut t = ViewportTransform::default();
+        for _ in 0..30 {
+            t.zoom_around(0.5, 0.0, 0.0);
+        }
+        assert!(
+            t.scale <= ViewportTransform::MAX_SCALE,
+            "scale {} above maximum {}",
+            t.scale,
+            ViewportTransform::MAX_SCALE
+        );
+    }
+
+    #[test]
+    fn viewport_zoom_around_adjusts_translation() {
+        let mut t = ViewportTransform {
+            translate_x: 100.0,
+            translate_y: 100.0,
+            scale: 1.0,
+        };
+        // Zoom 2× around canvas centre (200, 200)
+        t.zoom_around(1.0, 200.0, 200.0);
+        assert!(
+            (t.scale - 2.0).abs() < 1e-4,
+            "expected scale ~2.0, got {}",
+            t.scale
+        );
+        // After 2× zoom around (200,200), translate should shift towards origin
+        assert_ne!(t.translate_x, 100.0, "translate_x should change on zoom");
+    }
+
+    #[test]
+    fn project_new_seeds_artboard_and_button() {
+        let p = Project::new("Test");
+        assert_eq!(p.name, "Test");
+        assert_eq!(p.artboards.len(), 1);
+        let ab = &p.artboards[0];
+        assert_eq!(ab.name, "Mobile");
+        assert_eq!(ab.components.len(), 1);
+        assert!(matches!(ab.components[0].kind, ComponentKind::Button));
+    }
+
+    #[test]
+    fn artboard_mobile_has_correct_dimensions() {
+        let ab = Artboard::mobile("M");
+        assert!((ab.width - 390.0).abs() < 1e-4);
+        assert!((ab.height - 844.0).abs() < 1e-4);
+    }
+
+    #[test]
+    fn canvas_component_serde_round_trip() {
+        let c = CanvasComponent::new(
+            ComponentKind::Button,
+            "Test Button",
+            Bounds::new(10.0, 20.0, 120.0, 44.0),
+        );
+        let json = serde_json::to_string(&c).expect("serialize");
+        let restored: CanvasComponent = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(restored.name, c.name);
+        assert_eq!(restored.bounds.x, c.bounds.x);
+        assert_eq!(restored.bounds.width, c.bounds.width);
+        assert!(matches!(restored.kind, ComponentKind::Button));
+    }
+
+    #[test]
+    fn project_palette_default_has_all_fields() {
+        let p = ProjectPalette::default();
+        assert!(!p.primary.is_empty());
+        assert!(!p.secondary.is_empty());
+        assert!(!p.accent.is_empty());
+        assert!(!p.success.is_empty());
+        assert!(!p.error.is_empty());
+    }
+
+    #[test]
+    fn component_id_display_is_uuid_string() {
+        let id = ComponentId::new();
+        let s = id.to_string();
+        assert_eq!(s.len(), 36, "UUID string should be 36 chars");
+        assert!(s.contains('-'), "UUID string should contain dashes");
+    }
+
+    #[test]
+    fn gesture_phase_default_is_idle() {
+        assert_eq!(GesturePhase::default(), GesturePhase::Idle);
+    }
+}
