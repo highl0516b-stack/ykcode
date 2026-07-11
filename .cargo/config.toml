@@ -1,0 +1,21 @@
+[build]
+# cargo-leptos manages target selection per crate; no global default override.
+
+[target.wasm32-unknown-unknown]
+rustflags = [
+    # Required by getrandom/uuid on wasm32
+    "--cfg", "getrandom_backend=\"wasm_js\"",
+]
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))']
+runner = "wasm-bindgen-test-runner"
+
+[alias]
+leptos-watch  = "leptos watch"
+leptos-build  = "leptos build --release"
+leptos-serve  = "leptos serve"
+
+[env]
+LEPTOS_OUTPUT_NAME   = "ykcode"
+LEPTOS_SITE_ROOT     = "target/site"
+LEPTOS_SITE_PKG_DIR  = "pkg"

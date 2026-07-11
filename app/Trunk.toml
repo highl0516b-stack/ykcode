@@ -1,0 +1,23 @@
+# Trunk configuration for CSR-only builds.
+# Fullstack SSR + hydration uses cargo-leptos (workspace Cargo.toml).
+# Usage: cd app && trunk build --release --features csr
+
+[build]
+target       = "index.html"
+dist         = "../target/trunk"
+public_url   = "/"
+filehash     = true
+inject_scripts = true
+
+[watch]
+watch  = ["src", "index.html", "../style", "../shared/src"]
+ignore = ["target", "pkg"]
+
+[serve]
+addresses = ["127.0.0.1"]
+port      = 8080
+open      = false
+
+[clean]
+dist  = "../target/trunk"
+cargo = true
