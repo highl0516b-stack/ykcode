@@ -106,7 +106,12 @@ pub(crate) fn Toolbar() -> impl IntoView {
                 </button>
                 <div class="yk-toolbar__sep"/>
                 <button class="yk-btn yk-btn--secondary">"Preview"</button>
-                <button class="yk-btn yk-btn--primary">"Publish"</button>
+                <button
+                    class="yk-btn yk-btn--primary"
+                    on:click=move |_| ctx.publish_open.set(true)
+                >
+                    "Publish"
+                </button>
             </div>
         </header>
     }

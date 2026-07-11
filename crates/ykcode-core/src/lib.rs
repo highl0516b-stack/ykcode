@@ -468,6 +468,87 @@ impl Document {
             }
         }
     }
+
+    /// Generate next unused page slug like /page-2, /page-3, etc.
+    fn next_page_slug(&self) -> String {
+        let mut n = 2u32;
+        loop {
+            let slug = format!("/page-{n}");
+            if !self.pages.iter().any(|p| p.slug == slug) {
+                return slug;
+            }
+            n += 1;
+        }
+    }
+
+    /// Build a fresh Section root node for a new page.
+    fn new_page_root() -> Node {
+        Node {
+            id: NodeId::new(),
+            kind: NodeKind::Section,
+            name: "Page root".into(),
+            children: vec![],
+            layout: Layout {
+                padding: Spacing::all(24.0),
+                ..Layout::default()
+            },
+            appearance: Appearance {
+                background: Some(Color::WHITE),
+                ..Appearance::default()
+            },
+            typography: None,
+            content: None,
+            locked: false,
+            visible: true,
+        }
+    }
+
+    /// Add a new blank page. Returns the new page's UUID.
+    /// Does NOT switch the active page.
+    pub fn add_page(&mut self, name: impl Into<String>) -> Uuid {
+        let page_id = Uuid::new_v4();
+        let root = Self::new_page_root();
+        let root_id = root.id;
+        self.nodes.insert(root_id, root);
+        self.pages.push(Page {
+            id: page_id,
+            name: name.into(),
+            slug: self.next_page_slug(),
+            root_node: root_id,
+        });
+        page_id
+    }
+
+    /// Switch active page. No-op if page_id not found.
+    pub fn set_active_page(&mut self, page_id: Uuid) {
+        if self.pages.iter().any(|p| p.id == page_id) {
+            self.active_page_id = Some(page_id);
+        }
+    }
+
+    /// Remove a page. Returns error if only one page remains or page not found.
+    pub fn remove_page(&mut self, page_id: Uuid) -> Result<(), &'static str> {
+        if self.pages.len() <= 1 {
+            return Err("cannot remove last page");
+        }
+        let idx = self
+            .pages
+            .iter()
+            .position(|p| p.id == page_id)
+            .ok_or("page not found")?;
+        self.pages.remove(idx);
+        if self.active_page_id == Some(page_id) {
+            self.active_page_id = self.pages.first().map(|p| p.id);
+        }
+        Ok(())
+    }
+
+    /// Rename a page (slug unchanged).
+    pub fn rename_page(&mut self, page_id: Uuid, new_name: impl Into<String>) {
+        if let Some(page) = self.pages.iter_mut().find(|p| p.id == page_id) {
+            page.name = new_name.into();
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -626,5 +707,53 @@ mod tests {
         let id = n.id;
         doc.insert_at(n, root, 999);
         assert_eq!(doc.node(&root).unwrap().children, &[id]);
+    }
+
+    #[test]
+    fn add_page_creates_root_and_slug() {
+        let mut doc = Document::default();
+        let id = doc.add_page("About");
+        assert_eq!(doc.pages.len(), 2);
+        let page = doc.pages.iter().find(|p| p.id == id).unwrap();
+        assert_eq!(page.name, "About");
+        assert_eq!(page.slug, "/page-2");
+        assert!(doc.nodes.contains_key(&page.root_node));
+        // add_page does not switch active page
+        assert_eq!(doc.active_page_id, Some(doc.pages[0].id));
+    }
+
+    #[test]
+    fn set_active_page_switches() {
+        let mut doc = Document::default();
+        let id = doc.add_page("Contact");
+        doc.set_active_page(id);
+        assert_eq!(doc.active_page().unwrap().name, "Contact");
+    }
+
+    #[test]
+    fn remove_page_rejects_last() {
+        let mut doc = Document::default();
+        let only = doc.pages[0].id;
+        assert_eq!(doc.remove_page(only), Err("cannot remove last page"));
+    }
+
+    #[test]
+    fn remove_page_falls_back_to_remaining() {
+        let mut doc = Document::default();
+        let id2 = doc.add_page("Second");
+        doc.set_active_page(id2);
+        doc.remove_page(id2).unwrap();
+        assert_eq!(doc.pages.len(), 1);
+        assert_eq!(doc.active_page().unwrap().name, "Home");
+    }
+
+    #[test]
+    fn rename_page_updates_name_not_slug() {
+        let mut doc = Document::default();
+        let pid = doc.pages[0].id;
+        let slug = doc.pages[0].slug.clone();
+        doc.rename_page(pid, "Landing");
+        assert_eq!(doc.pages[0].name, "Landing");
+        assert_eq!(doc.pages[0].slug, slug);
     }
 }

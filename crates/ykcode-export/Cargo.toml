@@ -1,0 +1,8 @@
+[package]
+name = "ykcode-export"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+ykcode-core.workspace = true

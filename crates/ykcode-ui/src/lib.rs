@@ -1,9 +1,11 @@
 mod autosave;
 mod canvas;
 mod dnd;
+mod download;
 mod editor;
 mod history;
 mod layers;
+mod pages;
 mod palette;
 mod properties;
 mod toolbar;
@@ -19,6 +21,8 @@ use leptos_router::{
 use ykcode_core::{Display, Document, FlexDirection, Node, NodeId, Size};
 
 use crate::editor::Editor;
+
+pub(crate) use pages::PageStrip;
 
 pub use history::{can_redo, can_undo, redo, undo, with_history};
 
@@ -62,6 +66,7 @@ pub struct EditorCtx {
     pub undo_stack: RwSignal<Vec<Document>>,
     pub redo_stack: RwSignal<Vec<Document>>,
     pub history_paused: RwSignal<bool>,
+    pub publish_open: RwSignal<bool>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]

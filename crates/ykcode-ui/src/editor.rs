@@ -5,6 +5,7 @@ use crate::layers::LayerTree;
 use crate::palette::ComponentPalette;
 use crate::properties::PropertiesPanel;
 use crate::toolbar::Toolbar;
+use crate::PageStrip;
 use crate::{EditorCtx, LeftTab, SaveStatus};
 
 #[component]
@@ -23,6 +24,7 @@ pub(crate) fn Editor() -> impl IntoView {
         undo_stack: RwSignal::new(Vec::new()),
         redo_stack: RwSignal::new(Vec::new()),
         history_paused: RwSignal::new(false),
+        publish_open: RwSignal::new(false),
     };
     provide_context(ctx);
 
@@ -32,12 +34,14 @@ pub(crate) fn Editor() -> impl IntoView {
     view! {
         <div class="yk-shell">
             <Toolbar/>
+            <PageStrip/>
             <div class="yk-workspace">
                 <LeftPanel/>
                 <CanvasArea/>
                 <PropertiesPanel/>
             </div>
             <StatusBar/>
+            {move || ctx.publish_open.get().then(|| view! { <PublishModal/> })}
         </div>
     }
 }
@@ -126,5 +130,84 @@ pub(crate) fn StatusBar() -> impl IntoView {
                 }}
             </span>
         </footer>
+    }
+}
+
+#[component]
+fn PublishModal() -> impl IntoView {
+    let ctx = use_context::<EditorCtx>().expect("EditorCtx missing");
+
+    let page_count = move || ctx.document.with(|d| d.pages.len());
+    let component_count = move || {
+        ctx.document.with(|d| {
+            d.active_page()
+                .and_then(|p| d.node(&p.root_node))
+                .map(|n| n.children.len())
+                .unwrap_or(0)
+        })
+    };
+    let doc_name = move || ctx.document.with(|d| d.name.clone());
+
+    let close = move |_| ctx.publish_open.set(false);
+
+    let download = move |_| {
+        #[cfg(feature = "hydrate")]
+        {
+            let doc = ctx.document.get_untracked();
+            if let Err(e) = crate::download::trigger_html_download(&doc) {
+                leptos::logging::warn!("Export error: {:?}", e);
+            }
+        }
+        ctx.publish_open.set(false);
+    };
+
+    view! {
+        <div
+            class="yk-publish-backdrop"
+            on:click=close
+        >
+            <div
+                class="yk-publish-modal"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="publish-title"
+                on:click=|ev| ev.stop_propagation()
+            >
+                <header class="yk-publish-modal__header">
+                    <h2 id="publish-title" class="yk-publish-modal__title">
+                        "Export project"
+                    </h2>
+                    <button class="yk-btn yk-btn--ghost" on:click=close>"×"</button>
+                </header>
+                <div class="yk-publish-modal__body">
+                    <dl class="yk-publish-modal__info">
+                        <div>
+                            <dt>"Project"</dt>
+                            <dd>{doc_name}</dd>
+                        </div>
+                        <div>
+                            <dt>"Pages"</dt>
+                            <dd>{page_count}</dd>
+                        </div>
+                        <div>
+                            <dt>"Components on active page"</dt>
+                            <dd>{component_count}</dd>
+                        </div>
+                        <div>
+                            <dt>"Format"</dt>
+                            <dd>"Single HTML file (embedded CSS)"</dd>
+                        </div>
+                    </dl>
+                </div>
+                <footer class="yk-publish-modal__footer">
+                    <button class="yk-btn yk-btn--secondary" on:click=close>
+                        "Cancel"
+                    </button>
+                    <button class="yk-btn yk-btn--primary" on:click=download>
+                        "⬇ Download HTML"
+                    </button>
+                </footer>
+            </div>
+        </div>
     }
 }
