@@ -42,7 +42,8 @@ thiserror = { version = "2.0.18" }
 anyhow = { version = "1.0.103" }
 
 # Utilities
-uuid = { version = "1.23.4", features = ["v4", "serde"] }
+uuid = { version = "1.23.4", features = ["v4", "serde", "js"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 # WASM
 wasm-bindgen = { version = "0.2.126" }

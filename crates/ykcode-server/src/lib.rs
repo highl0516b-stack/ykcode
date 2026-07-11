@@ -1,7 +1,7 @@
 use axum::{routing::get, Json, Router};
 use serde_json::{json, Value};
 
-pub fn api_router() -> Router {
+pub fn api_router<S: Clone + Send + Sync + 'static>() -> Router<S> {
     Router::new()
         .route("/api/health", get(health_check))
         .route("/api/version", get(version_info))
