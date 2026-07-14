@@ -1,0 +1,17 @@
+[package]
+name = "ykcode-storage"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[features]
+default = []
+native = ["dep:fjall"]
+
+[dependencies]
+ykcode-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+fjall = { workspace = true, optional = true }

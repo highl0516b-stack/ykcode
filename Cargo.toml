@@ -1,0 +1,83 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/ykcode-core",
+    "crates/ykcode-export",
+    "crates/ykcode-storage",
+    "crates/ykcode-ui",
+    "crates/ykcode-server",
+    "frontend",
+    "backend",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+license = "AGPL-3.0-or-later"
+authors = ["ykcode team"]
+
+[workspace.dependencies]
+# Leptos ecosystem
+leptos = { version = "0.8.20", default-features = false }
+leptos_axum = { version = "0.8.10" }
+leptos_config = { version = "0.8.10" }
+leptos_meta = { version = "0.8.6" }
+leptos_router = { version = "0.8.14" }
+
+# Web server
+axum = { version = "0.8.9", default-features = false, features = ["json", "macros", "http1", "tokio"] }
+tokio = { version = "1.52.3", features = ["full"] }
+tower = { version = "0.5.3" }
+tower-http = { version = "0.6.11", features = ["cors", "trace", "fs"] }
+
+# Storage
+fjall = { version = "3.1.6" }
+
+# Serialization
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = { version = "1.0.150" }
+
+# Error handling
+thiserror = { version = "2.0.18" }
+anyhow = { version = "1.0.103" }
+
+# Utilities
+uuid = { version = "1.23.4", features = ["v4", "serde", "js"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# WASM
+wasm-bindgen = { version = "0.2.126" }
+gloo-net = { version = "0.6.0", default-features = false, features = ["http"] }
+web-sys = { version = "0.3.103", features = [
+    "DataTransfer",
+    "Window",
+    "Document",
+    "HtmlAnchorElement",
+    "Blob",
+    "BlobPropertyBag",
+    "Url",
+] }
+js-sys = { version = "0.3.103" }
+
+# Internal crates
+ykcode-core = { path = "crates/ykcode-core" }
+ykcode-export = { path = "crates/ykcode-export" }
+ykcode-storage = { path = "crates/ykcode-storage" }
+ykcode-ui = { path = "crates/ykcode-ui" }
+ykcode-server = { path = "crates/ykcode-server" }
+
+[[workspace.metadata.leptos]]
+name = "ykcode"
+bin-package = "ykcode-backend"
+lib-package = "ykcode-frontend"
+site-root = "target/site"
+site-pkg-dir = "pkg"
+style-file = "style/main.css"
+browserquery = "defaults"
+watch-additional-files = ["style"]
+env = "DEV"
+bin-features = ["ssr"]
+lib-features = ["hydrate"]
+bin-default-features = false
+lib-default-features = false
